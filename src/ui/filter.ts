@@ -1,6 +1,7 @@
 /** Search + chip filtering. Chips are data: add one by adding a row to CHIPS. */
 import { itemText } from '../engine/format';
 import type { Edition, Item } from '../engine/types';
+import { soulLabel } from './soulText';
 
 export type LabelKind = 'boss' | 'voucher' | 'tag';
 
@@ -43,7 +44,7 @@ export function matchesLabel(kind: LabelKind, name: string, f: Filter): boolean 
 
 /** Everything a user can read on the card: modifiers, name, and a Soul's legendary. */
 export function searchText(item: Item): string {
-  const soul = 'soul' in item && item.soul ? ` ${item.soul.legendary} ${item.soul.edition ?? ''}` : '';
+  const soul = 'soul' in item && item.soul ? ` ${soulLabel(item.soul)}` : '';
   return itemText(item) + soul;
 }
 

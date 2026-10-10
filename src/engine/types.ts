@@ -9,8 +9,11 @@ export interface Stickers {
 /** 1-based order of appearance across the whole run. */
 export interface SoulResult {
   index: number;
+  /** Legendary joker name, or plain "Joker" once every legendary is already owned. */
   legendary: string;
   edition: Edition;
+  /** True when all legendaries were owned, so the game fell back to plain Joker. */
+  allOwned?: boolean;
 }
 
 export type ConsumableKind = 'tarot' | 'planet' | 'spectral';

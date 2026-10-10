@@ -4,7 +4,7 @@
  */
 import { SOUL_CARD, UNLOCK_OPTIONS } from './constants';
 import { toEdition } from './editions';
-import { createInstance } from './instance';
+import { createInstance, withHandle } from './instance';
 import type { CardHandle, EmVector, EngineInstance, ImmolateModule, JokerDataHandle } from './loader';
 import { normalizeSeed } from './seed';
 import { resolveSouls } from './souls';
@@ -99,73 +99,58 @@ function voucherUpgrades(engine: ImmolateModule): Map<string, string> {
 }
 
 function readShopItem(inst: EngineInstance, a: number): Item {
-  const raw = inst.nextShopItem(a);
-  try {
-    if (raw.type === 'Joker') {
-      const jd = raw.jokerData;
-      try {
-        return toJoker(jd);
-      } finally {
-        jd.delete();
-      }
-    }
-    return consumable(raw.item, SHOP_CONSUMABLE_KINDS[raw.type] ?? 'tarot');
-  } finally {
-    raw.delete();
-  }
+  return withHandle(inst.nextShopItem(a), (raw) =>
+    raw.type === 'Joker'
+      ? withHandle(raw.jokerData, toJoker)
+      : consumable(raw.item, SHOP_CONSUMABLE_KINDS[raw.type] ?? 'tarot'),
+  );
 }
 
 function readPack(engine: ImmolateModule, inst: EngineInstance, a: number): Pack {
   const name = inst.nextPack(a);
-  const info = engine.packInfo(name);
-  const { type, size, choices } = info;
-  info.delete();
+  const { type, size, choices } = withHandle(engine.packInfo(name), (info) => ({
+    type: info.type,
+    size: info.size,
+    choices: info.choices,
+  }));
   const reader = PACK_READERS[type];
   return { name, type, size, choices, items: reader ? reader(inst, size, a) : [] };
 }
 
 function readConsumables(vec: EmVector<string>, kind: ConsumableKind): Item[] {
-  const items: Item[] = [];
-  for (let c = 0; c < vec.size(); c++) items.push(consumable(vec.get(c), kind));
-  vec.delete();
-  return items;
+  return withHandle(vec, (v) => vectorItems(v, (name) => consumable(name, kind)));
 }
 
 function readJokers(vec: EmVector<JokerDataHandle>): Item[] {
-  const items: Item[] = [];
-  for (let c = 0; c < vec.size(); c++) {
-    const jd = vec.get(c);
-    items.push(toJoker(jd));
-    jd.delete();
-  }
-  vec.delete();
-  return items;
+  return withHandle(vec, (v) => vectorItems(v, (jd) => withHandle(jd, toJoker)));
 }
 
 function readCards(vec: EmVector<CardHandle>): Item[] {
-  const items: Item[] = [];
-  for (let c = 0; c < vec.size(); c++) {
-    const card = vec.get(c);
-    items.push({
-      kind: 'playing',
-      rank: RANKS[card.base[2] ?? ''] ?? card.base[2] ?? '',
-      suit: SUITS[card.base[0] ?? ''] ?? '',
-      enhancement: card.enhancement === 'No Enhancement' ? null : card.enhancement,
-      edition: toEdition(card.edition),
-      seal: card.seal === 'No Seal' ? null : card.seal,
-    });
-    card.delete();
-  }
-  vec.delete();
-  return items;
+  return withHandle(vec, (v) => vectorItems(v, (card) => withHandle(card, toPlayingCard)));
+}
+
+function toPlayingCard(card: CardHandle): Item {
+  return {
+    kind: 'playing',
+    rank: RANKS[card.base[2] ?? ''] ?? card.base[2] ?? '',
+    suit: SUITS[card.base[0] ?? ''] ?? '',
+    enhancement: card.enhancement === 'No Enhancement' ? null : card.enhancement,
+    edition: toEdition(card.edition),
+    seal: card.seal === 'No Seal' ? null : card.seal,
+  };
 }
 
 function toJoker(jd: JokerDataHandle): Item {
-  const st = jd.stickers;
-  const stickers = { eternal: st.eternal, perishable: st.perishable, rental: st.rental };
-  st.delete();
+  const stickers = withHandle(jd.stickers, (st) => ({ eternal: st.eternal, perishable: st.perishable, rental: st.rental }));
   const legendary = jd.rarity === '4' ? { rarity: 'Legendary' as const } : {};
   return { kind: 'joker', name: jd.joker, edition: toEdition(jd.edition), stickers, ...legendary };
+}
+
+/** Reads every element of an embind vector in order. */
+function vectorItems<T>(vec: EmVector<T>, read: (value: T) => Item): Item[] {
+  const items: Item[] = [];
+  for (let c = 0; c < vec.size(); c++) items.push(read(vec.get(c)));
+  return items;
 }
 
 function consumable(name: string, fallback: ConsumableKind): Item {

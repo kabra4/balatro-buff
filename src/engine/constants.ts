@@ -120,4 +120,9 @@ export const UNLOCK_OPTIONS = [
   'Palette',
 ] as const;
 
+export const LEGENDARY_JOKERS = ['Canio', 'Triboulet', 'Yorick', 'Chicot', 'Perkeo'] as const;
+
+/** What Balatro's get_current_pool falls back to when a pool is empty (j_joker). */
+export const EMPTY_POOL_JOKER = 'Joker';
+
 export const SOUL_CARD = 'The Soul';

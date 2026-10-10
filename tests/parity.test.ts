@@ -44,6 +44,11 @@ const CASES: { name: string; settings: Settings; mustContain?: string[] }[] = [
     },
   },
   {
+    name: 'Plasma Deck / Purple Stake / 1.0.1f, 200 cards (ante 1 capped)',
+    settings: { ...BASE, seed: 'CAPTEST', deck: 'Plasma Deck', stake: 'Purple Stake', maxAnte: 3, cardsPerAnte: 200 },
+    mustContain: ['15) ', '200) '],
+  },
+  {
     name: 'Magic Deck / Black Stake / 1.0.0n, everything locked',
     settings: { ...BASE, seed: '1234ABCD', deck: 'Magic Deck', stake: 'Black Stake', version: 10014, maxAnte: 9, cardsPerAnte: 10, locked: [...UNLOCK_OPTIONS] },
   },
@@ -54,7 +59,10 @@ describe('parity with TheSoul text output', () => {
     const engine = await loadTestEngine();
     const reference = theSoulReferenceText(engine, {
       ante: settings.maxAnte,
-      cardsPerAnte: Array.from({ length: settings.maxAnte }, (_, i) => cardsForAnte(i + 1, settings.cardsPerAnte)),
+      // TheSoul's default "15,50,50,…": ante 1 shop capped at 15 (hardcoded here, not via cardsForAnte).
+      cardsPerAnte: Array.from({ length: settings.maxAnte }, (_, i) =>
+        i === 0 ? Math.min(15, settings.cardsPerAnte) : settings.cardsPerAnte,
+      ),
       deck: settings.deck,
       stake: settings.stake,
       version: settings.version,
@@ -70,9 +78,10 @@ describe('parity with TheSoul text output', () => {
     expect(ours).toBe(reference);
   });
 
-  it('caps ante 1 shop at 15 cards', () => {
-    expect(cardsForAnte(1, 200)).toBe(15);
+  it('caps ante 1 shop at 15 cards', async () => {
+    const analysis = analyze(await loadTestEngine(), { ...BASE, maxAnte: 3, cardsPerAnte: 200 });
+
+    expect(analysis.antes.map((a) => a.shop.length)).toEqual([15, 200, 200]);
     expect(cardsForAnte(1, 10)).toBe(10);
-    expect(cardsForAnte(2, 200)).toBe(200);
   });
 });

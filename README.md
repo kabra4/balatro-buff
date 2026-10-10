@@ -34,7 +34,9 @@ Open the page, type a seed (or hit 🎲), pick deck / stake / game version. Resu
 
 Souls are visited in order of appearance (ante ascending; shop, then packs, in queue order). Each one
 calls the engine's `nextJoker('sou', ante, false)`; unless Showman is on, the received legendary is
-then locked, because you own it and the game won't offer it again. This uses a separate engine
+then locked, because you own it and the game won't offer it again. Once all five legendaries are
+owned the pool is empty and Balatro falls back to a plain **Joker** — shown as
+"Joker (all legendaries owned)", with the edition still rolled. This uses a separate engine
 instance, so the shop/pack output is unaffected. It assumes you take every Soul you see.
 
 ## Development

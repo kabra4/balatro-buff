@@ -1,31 +1,18 @@
 /// <reference lib="webworker" />
-/** Runs the wasm engine off the main thread. Loads it once, then answers analyze requests. */
+/** Runs the wasm engine off the main thread. */
 import { analyze } from './analyze';
 import { loadEngine } from './loader';
-import type { AnalyzeRequest, WorkerResponse } from './protocol';
+import type { AnalyzeRequest } from './protocol';
+import { createWorkerHandler } from './workerHandler';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
-const engineReady = loadEngine(new URL(import.meta.env.BASE_URL, scope.location.origin).href);
+const baseUrl = new URL(import.meta.env.BASE_URL, scope.location.origin).href;
 
-engineReady.then(
-  () => post({ type: 'ready' }),
-  (err: unknown) => post({ type: 'error', id: null, message: errorMessage(err) }),
-);
+const handler = createWorkerHandler({
+  load: () => loadEngine(baseUrl),
+  run: analyze,
+  post: (message) => scope.postMessage(message),
+});
 
-scope.onmessage = async (event: MessageEvent<AnalyzeRequest>) => {
-  const { id, settings } = event.data;
-  try {
-    const engine = await engineReady;
-    post({ type: 'result', id, analysis: analyze(engine, settings) });
-  } catch (err) {
-    post({ type: 'error', id, message: errorMessage(err) });
-  }
-};
-
-function post(message: WorkerResponse): void {
-  scope.postMessage(message);
-}
-
-function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
-}
+void handler.preload();
+scope.onmessage = (event: MessageEvent<AnalyzeRequest>) => void handler.handle(event.data);

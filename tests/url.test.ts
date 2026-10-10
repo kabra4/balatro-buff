@@ -43,6 +43,23 @@ describe('url state', () => {
     expect(parse(serialize(s))).toEqual(s);
   });
 
+  it.each([
+    ['ante=-5', { maxAnte: 1 }],
+    ['ante=0', { maxAnte: 1 }],
+    ['ante=abc', {}],
+    ['ante=', {}],
+    ['cards=7', {}],
+    ['cards=abc', {}],
+    ['version=1', {}],
+    ['version=10106.5', {}],
+    ['deck=red+deck', {}],
+    ['showman=yes', {}],
+    ['seed=%00%3Cscript%3E', { seed: 'SCRIPT' }],
+    ['locked=%2C%2C,Bogus', {}],
+  ])('hostile param %s parses safely', (query, expected) => {
+    expect(parse(query)).toEqual({ ...DEFAULT_SETTINGS, ...expected });
+  });
+
   it('falls back to defaults for invalid values and normalises the rest', () => {
     const s = parse('?seed=ab0c-d&deck=Nope&stake=Gold+Stake&version=1&ante=99&cards=7&locked=Blueprint,Bogus,Showman,Blueprint');
 

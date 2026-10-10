@@ -1,5 +1,5 @@
 import { SECOND_TIER_VOUCHERS, UNLOCK_OPTIONS } from './constants';
-import type { EngineInstance, ImmolateModule } from './loader';
+import type { EmHandle, EngineInstance, ImmolateModule } from './loader';
 import { normalizeSeed } from './seed';
 import type { Settings } from './types';
 
@@ -9,16 +9,30 @@ import type { Settings } from './types';
  */
 export function createInstance(engine: ImmolateModule, s: Settings): EngineInstance {
   const inst = new engine.Instance(normalizeSeed(s.seed));
-  const params = new engine.InstParams(s.deck, s.stake, s.showman, s.version);
-  inst.params = params;
-  params.delete();
-  inst.initLocks(1, false, false);
-  for (const voucher of SECOND_TIER_VOUCHERS) inst.lock(voucher);
-  const locked = new Set(s.locked);
-  for (const option of UNLOCK_OPTIONS) {
-    if (locked.has(option)) inst.lock(option);
+  try {
+    withHandle(new engine.InstParams(s.deck, s.stake, s.showman, s.version), (params) => {
+      inst.params = params;
+    });
+    inst.initLocks(1, false, false);
+    for (const voucher of SECOND_TIER_VOUCHERS) inst.lock(voucher);
+    const locked = new Set(s.locked);
+    for (const option of UNLOCK_OPTIONS) {
+      if (locked.has(option)) inst.lock(option);
+    }
+    inst.setStake(s.stake);
+    inst.setDeck(s.deck);
+    return inst;
+  } catch (err) {
+    inst.delete();
+    throw err;
   }
-  inst.setStake(s.stake);
-  inst.setDeck(s.deck);
-  return inst;
+}
+
+/** Runs `use(handle)` and always deletes the embind handle afterwards, even on throw. */
+export function withHandle<H extends EmHandle, R>(handle: H, use: (handle: H) => R): R {
+  try {
+    return use(handle);
+  } finally {
+    handle.delete();
+  }
 }

@@ -1,5 +1,6 @@
 import type { Item, ItemKind, ItemOf, SoulResult, Stickers } from '../engine/types';
 import { Sprite } from './Sprite';
+import { soulLabel } from './soulText';
 import { itemLayers, jokerSoulLayers } from './sprites';
 
 interface CardText {
@@ -63,8 +64,4 @@ function stickerLabels(stickers: Stickers): string[] {
 
 function compact(values: (string | null)[]): string[] {
   return values.filter((v): v is string => v !== null);
-}
-
-function soulLabel(soul: SoulResult): string {
-  return `→ ${soul.legendary}${soul.edition ? ` (${soul.edition})` : ''}`;
 }

@@ -1,4 +1,5 @@
 import type { SoulLocation } from '../engine/types';
+import { ALL_OWNED_NOTE } from './soulText';
 import { Sprite } from './Sprite';
 import { jokerLayers } from './sprites';
 
@@ -28,6 +29,7 @@ export function SoulSummary({ souls, maxAnte, onJump }: SoulSummaryProps) {
                     → {s.legendary}
                     {s.edition && <span class="soul-chip-edition"> ({s.edition})</span>}
                   </span>
+                  {s.allOwned && <span class="soul-chip-head">{ALL_OWNED_NOTE}</span>}
                 </span>
               </button>
             </li>

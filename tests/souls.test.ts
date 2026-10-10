@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { analyze } from '../src/engine/analyze';
 import type { ImmolateModule } from '../src/engine/loader';
-import { isSoulCard } from '../src/engine/souls';
-import type { Analysis, Item, Settings } from '../src/engine/types';
+import { LEGENDARY_JOKERS } from '../src/engine/constants';
+import { isSoulCard, resolveSouls } from '../src/engine/souls';
+import type { Analysis, AnteResult, Item, Settings } from '../src/engine/types';
 import { loadTestEngine } from './helpers/engine';
 
 /** Found by scanning random seeds: 3 Souls in antes 1–8 and, without locking, Yorick would repeat. */
@@ -39,7 +40,7 @@ describe('Soul → Legendary resolution', () => {
     expect(analysis.souls.map((s) => ({ legendary: s.legendary, edition: s.edition }))).toEqual(direct);
   });
 
-  it('never repeats a legendary without Showman, although the unlocked pool would', async () => {
+  it('does not repeat a legendary without Showman while some are still unowned', async () => {
     const engine = await loadTestEngine();
     const analysis = analyze(engine, SETTINGS);
     const legendaries = analysis.souls.map((s) => s.legendary);
@@ -71,6 +72,34 @@ describe('Soul → Legendary resolution', () => {
     );
   });
 
+  it('falls back to plain Joker once all five legendaries are owned (Showman off)', async () => {
+    const engine = await loadTestEngine();
+    const antes = [syntheticAnte(1, 4), syntheticAnte(2, 3)];
+
+    const souls = resolveSouls(engine, SETTINGS, antes);
+
+    const direct = directSoulRolls(engine, SETTINGS, souls.map((s) => s.ante), true);
+    expect(souls).toHaveLength(7);
+    expect(new Set(souls.slice(0, 5).map((s) => s.legendary))).toEqual(new Set(LEGENDARY_JOKERS));
+    expect(souls.slice(0, 5).every((s) => !s.allOwned)).toBe(true);
+    expect(souls.slice(5).map((s) => [s.legendary, s.allOwned])).toEqual([
+      ['Joker', true],
+      ['Joker', true],
+    ]);
+    // The engine itself would hand out an already-owned legendary here: that is the bug guarded against.
+    expect(LEGENDARY_JOKERS as readonly string[]).toContain(direct[5]!.legendary);
+    // The edition roll still happens, in the Soul's own ante stream.
+    expect(souls.map((s) => s.edition)).toEqual(direct.map((d) => d.edition));
+  });
+
+  it('with Showman never falls back to plain Joker', async () => {
+    const engine = await loadTestEngine();
+
+    const souls = resolveSouls(engine, { ...SETTINGS, showman: true }, [syntheticAnte(1, 7)]);
+
+    expect(souls.every((s) => !s.allOwned && (LEGENDARY_JOKERS as readonly string[]).includes(s.legendary))).toBe(true);
+  });
+
   it('rolls the edition from the Soul’s own ante stream', async () => {
     const engine = await loadTestEngine();
     const analysis = analyze(engine, SETTINGS);
@@ -81,6 +110,18 @@ describe('Soul → Legendary resolution', () => {
     expect(first.edition).toBe(sameAnte!.edition);
   });
 });
+
+/** An ante whose shop holds `souls` Soul cards and nothing else. */
+function syntheticAnte(ante: number, souls: number): AnteResult {
+  return {
+    ante,
+    boss: 'The Hook',
+    voucher: 'Hone',
+    tags: ['Rare Tag', 'Foil Tag'],
+    shop: Array.from({ length: souls }, (): Item => ({ kind: 'spectral', name: 'The Soul' })),
+    packs: [],
+  };
+}
 
 /** Raw engine calls, independent of src/engine/souls.ts. */
 function directSoulRolls(engine: ImmolateModule, s: Settings, antes: number[], lock: boolean) {

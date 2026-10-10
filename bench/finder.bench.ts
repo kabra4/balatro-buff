@@ -19,6 +19,7 @@ const CARDS = 50;
 const QUERIES: Record<string, FinderQuery> = {
   'tag-only (Charm Tag by 2)': query({ cardsPerAnte: CARDS }, [slot('tag', 'Charm Tag', 2)]),
   'soul → Perkeo by 2': query({ cardsPerAnte: CARDS }, [slot('soul', 'Perkeo', 2)]),
+  'joker Perkeo by 2 (via Soul)': query({ cardsPerAnte: CARDS }, [slot('joker', 'Perkeo', 2)]),
   'Negative Blueprint in shop by 3': query({ cardsPerAnte: CARDS }, [
     slot('joker', 'Blueprint', 3, { edition: 'Negative', where: 'shop' }),
   ]),

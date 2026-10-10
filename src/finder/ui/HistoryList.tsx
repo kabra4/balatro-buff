@@ -14,7 +14,7 @@ export function HistoryList({ hits, current, onSelect }: HistoryListProps) {
       <h2 class="history-title">Found this session · {hits.length}</h2>
       <ol class="history-list">
         {hits.map((hit) => (
-          <li key={`${hit.seed}-${hit.query.settings.deck}`}>
+          <li key={hit.id}>
             <button type="button" class={`history-item ${hit === current ? 'history-current' : ''}`} onClick={() => onSelect(hit)}>
               <span class="history-seed">{hit.seed}</span>
               <span class="history-meta">

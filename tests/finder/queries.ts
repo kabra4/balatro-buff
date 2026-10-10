@@ -56,6 +56,10 @@ export const QUERIES: Record<string, FinderQuery> = {
     slot('tag', 'Negative Tag', 2),
     slot('joker', 'Blueprint', 4),
   ]),
+  'legendary joker slot via Soul + Joker fallback name': query({ cardsPerAnte: 10 }, [
+    slot('joker', 'Perkeo', 6, { edition: 'none' }),
+    slot('joker', 'Joker', 2),
+  ]),
   'deep shop: Blueprint by 8, 50 cards, Black Stake': query({ stake: 'Black Stake', cardsPerAnte: 50, deck: 'Plasma Deck' }, [
     slot('joker', 'Blueprint', 8),
     slot('soul', 'Perkeo', 8, { where: 'packs' }),

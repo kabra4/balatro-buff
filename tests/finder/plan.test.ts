@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan } from '../../src/finder/plan';
+import { buildPlan, SOUL_PACK_TYPES } from '../../src/finder/plan';
 import { query, slot } from './queries';
 
 describe('buildPlan', () => {
@@ -28,6 +28,22 @@ describe('buildPlan', () => {
     expect([...plan.packTypes.keys()].sort()).toEqual(['Arcana Pack', 'Buffoon Pack', 'Spectral Pack']);
     expect(plan.souls).toBe(2);
     expect(plan.through.shop).toBe(2);
+  });
+
+  it('a legendary joker slot only uses Soul sources (shop/Buffoon never roll legendaries)', () => {
+    const plan = buildPlan(query({}, [slot('joker', 'Perkeo', 2)]));
+    expect(plan.through.shop).toBe(0);
+    expect([...plan.packTypes.keys()].sort()).toEqual(['Arcana Pack', 'Spectral Pack']);
+    expect(plan.souls).toBe(2);
+    expect(buildPlan(query({}, [slot('joker', 'Perkeo', 2, { where: 'shop' })])).impossible).toBe(true);
+    // Plain "Joker" is both a shop/Buffoon joker and the Soul fallback once all legendaries are owned.
+    const joker = buildPlan(query({}, [slot('joker', 'Joker', 2)]));
+    expect(joker.through.shop).toBe(2);
+    expect([...joker.packTypes.keys()].sort()).toEqual(['Arcana Pack', 'Buffoon Pack', 'Spectral Pack']);
+  });
+
+  it('Soul pack types come from the registry', () => {
+    expect([...SOUL_PACK_TYPES].sort()).toEqual(['Arcana Pack', 'Spectral Pack']);
   });
 
   it('a specific spectral skips Arcana/Celestial; Black Hole needs Celestial', () => {

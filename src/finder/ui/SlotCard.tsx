@@ -67,7 +67,7 @@ export function SlotCard({ slot, settings, problem, onChange, onRemove }: SlotCa
           <span class="field-label">Where</span>
           <select value={slot.where} onChange={(e) => patch({ where: (e.currentTarget as HTMLSelectElement).value as Where })}>
             {WHERE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value} disabled={!whereEnabled(slot.kind, o.value, settings)}>
+              <option key={o.value} value={o.value} disabled={!whereEnabled(slot, o.value, settings)}>
                 {o.label}
               </option>
             ))}

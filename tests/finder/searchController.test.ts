@@ -79,6 +79,28 @@ describe('SearchController', () => {
     expect(workers[0]!.last()).toEqual({ type: 'resume' });
   });
 
+  it('a thrown verification stops the search with an error instead of resuming', async () => {
+    const { controller, workers, found } = setup({ workerCount: 2, verify: async () => Promise.reject(new Error('engine aborted')) });
+    controller.start(QUERY);
+    workers[0]!.reply({ type: 'hit', seed: 'BOOM1111' });
+    await flush();
+    expect(found).toEqual([]);
+    expect(controller.snapshot()).toMatchObject({ status: 'error', workers: 0 });
+    expect(controller.snapshot().error).toContain('engine aborted');
+    expect(workers.every((w) => w.terminated && !w.sent.some((m) => m.type === 'resume'))).toBe(true);
+  });
+
+  it('found hits get unique ids across searches', async () => {
+    const { controller, workers, found } = setup({ workerCount: 1 });
+    controller.start(QUERY);
+    workers[0]!.reply({ type: 'hit', seed: 'SAMESEED' });
+    await flush();
+    controller.start(QUERY);
+    workers[1]!.reply({ type: 'hit', seed: 'SAMESEED' });
+    await flush();
+    expect(found.map((h) => h.id)).toEqual([1, 2]);
+  });
+
   it('stop terminates the workers and drops late messages', async () => {
     const { controller, workers, found } = setup({ workerCount: 2 });
     controller.start(QUERY);

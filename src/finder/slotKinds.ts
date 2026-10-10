@@ -7,14 +7,8 @@ import { EMPTY_POOL_JOKER, LEGENDARY_JOKERS, SPECTRAL_CARDS } from '../engine/co
 import type { Edition, Item } from '../engine/types';
 import { itemLayers, jokerLayers, tagLayers, voucherLayers, type Layer } from '../ui/sprites';
 import { JOKER_POS, TAG_POS, VOUCHER_POS } from '../ui/spriteTables';
+import type { AnteSource, PackType, ShopItemType } from './sources';
 import type { FinderSettings, Slot, SlotKind, Where } from './types';
-
-/** Base pack types as returned by the engine's `packInfo`. */
-export type PackType = 'Arcana Pack' | 'Celestial Pack' | 'Spectral Pack' | 'Buffoon Pack' | 'Standard Pack';
-/** Shop queue item types as rolled by the engine's `nextShopItem`. */
-export type ShopItemType = 'Joker' | 'Tarot' | 'Planet' | 'Spectral';
-/** Once-per-ante values. */
-export type AnteSource = 'voucher' | 'tags';
 
 /** How one concrete card looks to a slot kind. */
 export interface Facet {
@@ -44,6 +38,13 @@ export interface OccurrenceSources {
   packs?: Partial<Record<PackType, ItemSource>>;
 }
 
+/** The sources that could yield an occurrence this slot accepts (given its item, where and the settings). */
+export interface SlotSources {
+  ante: readonly AnteSource[];
+  shop: ShopSource | null;
+  packs: readonly (readonly [PackType, ItemSource])[];
+}
+
 export interface SlotKindSpec {
   label: string;
   itemOptions: readonly string[];
@@ -59,6 +60,8 @@ export interface SlotKindSpec {
 
 /** Legendary a Soul yields, or plain Joker once all five are owned. */
 const SOUL_YIELDS: readonly string[] = [...LEGENDARY_JOKERS, EMPTY_POOL_JOKER];
+/** Shop and Buffoon jokers come from the rarity 1–3 pools: never a legendary. */
+const POOL_JOKERS: readonly string[] = Object.keys(JOKER_POS).filter((name) => !(LEGENDARY_JOKERS as readonly string[]).includes(name));
 
 const soulSource: ItemSource = { facet: soulFacet, names: SOUL_YIELDS, soul: true };
 
@@ -71,8 +74,8 @@ export const SLOT_KINDS: Readonly<Record<SlotKind, SlotKindSpec>> = {
     hasEdition: true,
     hasWhere: true,
     occurrenceSources: {
-      shop: { types: ['Joker'], facet: jokerFacet },
-      packs: { 'Buffoon Pack': { facet: jokerFacet }, 'Arcana Pack': soulSource, 'Spectral Pack': soulSource },
+      shop: { types: ['Joker'], facet: jokerFacet, names: POOL_JOKERS },
+      packs: { 'Buffoon Pack': { facet: jokerFacet, names: POOL_JOKERS }, 'Arcana Pack': soulSource, 'Spectral Pack': soulSource },
     },
   },
   soul: {
@@ -123,12 +126,18 @@ export const SLOT_KINDS: Readonly<Record<SlotKind, SlotKindSpec>> = {
 
 export const SLOT_KIND_IDS = Object.keys(SLOT_KINDS) as SlotKind[];
 
-/** Whether a `where` choice can ever match for this kind under these settings. */
-export function whereEnabled(kind: SlotKind, where: Where, settings: FinderSettings): boolean {
-  const { shop, packs } = SLOT_KINDS[kind].occurrenceSources;
-  if (where === 'shop') return shop !== undefined && (shop.onlyIf?.settings(settings) ?? true);
-  if (where === 'packs') return packs !== undefined;
-  return true;
+export function slotSources(slot: Slot, settings: FinderSettings): SlotSources {
+  const spec = SLOT_KINDS[slot.kind];
+  const { ante = [], shop, packs = {} } = spec.occurrenceSources;
+  const where = spec.hasWhere ? slot.where : 'any';
+  const shopOk = shop && where !== 'packs' && canYield(shop, slot) && (shop.onlyIf?.settings(settings) ?? true);
+  const packSources = where === 'shop' ? [] : (Object.entries(packs) as [PackType, ItemSource][]).filter(([, src]) => canYield(src, slot));
+  return { ante, shop: shopOk ? shop : null, packs: packSources };
+}
+
+/** Whether choosing `where` for this slot could ever match (UI disables the rest). */
+export function whereEnabled(slot: Slot, where: Where, settings: FinderSettings): boolean {
+  return hasAnySource(slotSources({ ...slot, where }, settings));
 }
 
 export function anyLabel(kind: SlotKind): string {
@@ -141,16 +150,24 @@ export function slotProblem(slot: Slot, settings: FinderSettings): string | null
   const spec = SLOT_KINDS[slot.kind];
   if (slot.item === null && !spec.allowsAny) return `Pick a ${spec.label.toLowerCase()}`;
   if (slot.item !== null && !spec.itemOptions.includes(slot.item)) return `Unknown ${spec.label.toLowerCase()} "${slot.item}"`;
-  if (spec.hasWhere && !whereEnabled(slot.kind, slot.where, settings)) {
-    const hint = slot.where === 'shop' ? spec.occurrenceSources.shop?.onlyIf?.hint : undefined;
-    return hint ?? `${spec.label} can't appear in the ${slot.where}`;
-  }
-  return null;
+  if (hasAnySource(slotSources(slot, settings))) return null;
+  const shop = spec.occurrenceSources.shop;
+  if (slot.where === 'shop' && shop?.onlyIf && canYield(shop, slot) && !shop.onlyIf.settings(settings)) return shop.onlyIf.hint;
+  const what = slot.item ?? spec.label;
+  return slot.where === 'any' ? `${what} can't appear in a run` : `${what} can't appear in the ${slot.where}`;
 }
 
 /** Blank slot of `kind` (keeps the deadline). */
 export function blankSlot(id: string, kind: SlotKind, byAnte: number): Slot {
   return { id, kind, item: null, edition: 'any', where: 'any', byAnte };
+}
+
+function hasAnySource(sources: SlotSources): boolean {
+  return sources.ante.length > 0 || sources.shop !== null || sources.packs.length > 0;
+}
+
+function canYield(source: ItemSource, slot: Slot): boolean {
+  return slot.item === null || source.names === undefined || source.names.includes(slot.item);
 }
 
 function jokerFacet(item: Item): Facet | null {

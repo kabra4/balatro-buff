@@ -21,6 +21,29 @@ describe('slot-kind registry', () => {
     expect(sorted(SLOT_KINDS.spectral.itemOptions)).toEqual(sorted([...spectrals, 'The Soul', 'Black Hole']));
   });
 
+  it('engine pools are name-disjoint (plan.ts relies on it: one source\'s locks never change another\'s picks)', async () => {
+    const engine = (await loadTestEngine()) as unknown as Record<string, EmVector<string>>;
+    const names = (key: string) => Array.from({ length: engine[key]!.size() }, (_, i) => engine[key]!.get(i)).filter((n) => n !== 'RETRY');
+    const pools: Record<string, string[]> = {
+      tarots: names('TAROTS'),
+      planets: names('PLANETS'),
+      spectrals: [...names('SPECTRALS'), 'The Soul', 'Black Hole'],
+      jokers: ['COMMON_JOKERS', 'UNCOMMON_JOKERS', 'RARE_JOKERS', 'LEGENDARY_JOKERS'].flatMap(names),
+      vouchers: names('VOUCHERS'),
+      tags: names('TAGS'),
+      bosses: names('BOSSES'),
+    };
+    const owner = new Map<string, string>();
+    const shared: string[] = [];
+    for (const [pool, list] of Object.entries(pools)) {
+      for (const name of new Set(list)) {
+        if (owner.has(name)) shared.push(`${name}: ${owner.get(name)} & ${pool}`);
+        owner.set(name, pool);
+      }
+    }
+    expect(shared).toEqual([]);
+  });
+
   it('every kind has sprites for its items', () => {
     for (const kind of SLOT_KIND_IDS) {
       for (const item of SLOT_KINDS[kind].itemOptions) expect(SLOT_KINDS[kind].itemLayers(item).length, `${kind} ${item}`).toBeGreaterThan(0);
@@ -35,8 +58,13 @@ describe('slot-kind registry', () => {
     const shopSpectral = { ...blankSlot('a', 'spectral', 2), where: 'shop' as const };
     expect(slotProblem(shopSpectral, BASE_SETTINGS)).toBe('Shop spectrals need the Ghost Deck');
     expect(slotProblem(shopSpectral, ghost)).toBeNull();
-    expect(whereEnabled('soul', 'shop', ghost)).toBe(false);
+    expect(whereEnabled(blankSlot('a', 'soul', 2), 'shop', ghost)).toBe(false);
     expect(slotProblem(blankSlot('a', 'joker', 2), BASE_SETTINGS)).toBeNull();
+    const shopPerkeo = { ...blankSlot('a', 'joker', 2), item: 'Perkeo', where: 'shop' as const };
+    expect(slotProblem(shopPerkeo, BASE_SETTINGS)).toBe("Perkeo can't appear in the shop");
+    expect(whereEnabled({ ...shopPerkeo, where: 'any' }, 'shop', BASE_SETTINGS)).toBe(false);
+    expect(slotProblem({ ...shopPerkeo, where: 'packs' }, BASE_SETTINGS)).toBeNull();
+    expect(slotProblem({ ...shopPerkeo, item: 'Blueprint' }, BASE_SETTINGS)).toBeNull();
   });
 });
 

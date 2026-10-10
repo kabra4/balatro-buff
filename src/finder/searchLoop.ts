@@ -51,11 +51,15 @@ export function createSearchLoop(deps: SearchLoopDeps): SearchLoop {
     deps.post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
   };
 
-  const loop = async (gen: number) => {
+  /**
+   * At most one loop runs per worker. It always uses the current checker, so a new `start` while
+   * a loop is still parked in yieldNow() is picked up by that loop instead of being dropped.
+   */
+  const loop = async () => {
     if (looping) return;
     looping = true;
     try {
-      while (wantRunning && gen === generation && checker) {
+      while (wantRunning && checker) {
         const hit = runBatch(checker);
         if (hit !== null) {
           wantRunning = false;
@@ -102,7 +106,7 @@ export function createSearchLoop(deps: SearchLoopDeps): SearchLoop {
       return;
     }
     lastProgress = deps.now();
-    void loop(gen);
+    void loop();
   };
 
   return {
@@ -118,7 +122,7 @@ export function createSearchLoop(deps: SearchLoopDeps): SearchLoop {
         case 'resume':
           wantRunning = true;
           lastProgress = deps.now();
-          void loop(generation);
+          void loop();
       }
     },
   };

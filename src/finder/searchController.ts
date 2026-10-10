@@ -22,6 +22,8 @@ export interface FinderWorkerLike {
 export type Verifier = (query: FinderQuery, seed: string) => Promise<Map<string, Occurrence> | null>;
 
 export interface VerifiedHit {
+  /** Unique per controller (across searches). */
+  id: number;
   seed: string;
   query: FinderQuery;
   /** Slot id → the occurrence (from full analysis) that satisfies it. */
@@ -70,6 +72,7 @@ export class SearchController {
   private found = 0;
   private rejected = 0;
   private restarts = 0;
+  private hitIds = 0;
   private elapsedBefore = 0;
   private runningSince: number | null = null;
   private samples: Sample[] = [];
@@ -193,9 +196,8 @@ export class SearchController {
         if (run === this.run) this.verified(query, seed, matches);
       },
       (err: unknown) => {
-        if (run !== this.run) return;
-        this.error = `Verification failed for ${seed}: ${err instanceof Error ? err.message : String(err)}`;
-        this.verified(query, seed, null);
+        // A thrown verification (engine failure) is not a "no": stop instead of resuming blindly.
+        if (run === this.run) this.fail(`Verification failed for ${seed}: ${err instanceof Error ? err.message : String(err)}`);
       },
     );
     return true;
@@ -205,7 +207,7 @@ export class SearchController {
     if (matches) {
       this.found++;
       this.status = 'paused';
-      this.deps.onFound?.({ seed, query, matches });
+      this.deps.onFound?.({ id: ++this.hitIds, seed, query, matches });
     } else {
       this.rejected++;
       if (!this.verifyQueued()) this.resume();

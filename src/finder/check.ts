@@ -3,17 +3,16 @@
  * (see plan.ts), ante by ante, and rejects as soon as a deadline can no longer be met.
  * `fullCheck` is the reference: full `analyze()` + `matchSlots` — used to verify every hit.
  */
-import { analyze, cardsForAnte, createVoucherRoller, packsForAnte, readPackItems } from '../engine/analyze';
-import { toEdition } from '../engine/editions';
+import { analyze, cardsForAnte, packsForAnte, readPackItems } from '../engine/analyze';
 import { createInstance, withHandle } from '../engine/instance';
 import type { EngineInstance, ImmolateModule } from '../engine/loader';
 import { createSoulRoller, isSoulCard, type SoulRoller } from '../engine/souls';
-import type { Analysis, Item } from '../engine/types';
+import type { Analysis } from '../engine/types';
 import { matchSlots, type Occurrence } from './match';
 import { OccurrenceCollector, occurrencesFrom } from './occurrences';
 import { buildPlan, STEP_ORDER, type Plan, type StepId } from './plan';
-import type { PackType, ShopItemType } from './slotKinds';
 import { seedSettings } from './query';
+import { ANTE_SOURCE_IDS, ANTE_SOURCES, SHOP_READERS, type AnteRoller, type AnteSource, type PackType, type ShopItemType } from './sources';
 import type { FinderQuery, Slot } from './types';
 
 export interface Checker {
@@ -48,22 +47,6 @@ interface SeedRun {
   occ: OccurrenceCollector;
 }
 
-type ShopReader = (inst: EngineInstance, ante: number) => Item;
-
-const NO_STICKERS = Object.freeze({ eternal: false, perishable: false, rental: false });
-
-/** Fast-path shop readers: same streams as nextShopItem after its "cdt" roll (jokers without stickers). */
-const SHOP_READERS: Partial<Record<ShopItemType, ShopReader>> = {
-  Joker: (inst, a) =>
-    withHandle(inst.nextJoker('sho', a, false), (jd) => ({
-      kind: 'joker',
-      name: jd.joker,
-      edition: toEdition(jd.edition),
-      stickers: NO_STICKERS,
-    })),
-  Spectral: (inst, a) => ({ kind: 'spectral', name: inst.nextSpectral('sho', a, false) }),
-};
-
 export function fullCheck(engine: ImmolateModule, query: FinderQuery, seed: string): FullCheck {
   const analysis = analyze(engine, seedSettings(query, seed));
   return { analysis, matches: matchSlots(query.slots, occurrencesFrom(analysis)) };
@@ -76,19 +59,16 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
   }
   const allSlots = query.slots;
   const dueAfter = dueSlots(plan);
-  const rollVoucher = createVoucherRoller(engine, query.settings.locked);
+  const anteRollers = new Map<AnteSource, AnteRoller>(
+    ANTE_SOURCE_IDS.filter((id) => plan.through[id] > 0).map((id) => [id, ANTE_SOURCES[id].createRoller(engine, query.settings)]),
+  );
   const packInfos = new Map<string, PackInfo>();
   let rates: ShopRates | null = null;
 
-  const steps: Record<StepId, (run: SeedRun, a: number) => void> = {
-    voucher: ({ inst, occ }, a) => occ.voucher(a, rollVoucher(inst, a)),
-    tags: ({ inst, occ }, a) => {
-      inst.initUnlocks(a, false);
-      const first = inst.nextTag(a);
-      occ.tags(a, [first, inst.nextTag(a)]);
-    },
-    packs: (run, a) => rollPacks(run, a),
-    shop: (run, a) => rollShop(run, a),
+  const rollStep = (step: StepId, run: SeedRun, a: number): void => {
+    if (step === 'packs') rollPacks(run, a);
+    else if (step === 'shop') rollShop(run, a);
+    else run.occ.anteValues(a, step, anteRollers.get(step)?.(run.inst, a) ?? []);
   };
 
   const rollPacks = ({ inst, souls, occ }: SeedRun, a: number): void => {
@@ -120,13 +100,15 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
   const run = (seed: string, earlyExit: boolean): OccurrenceCollector | null => {
     const settings = seedSettings(query, seed);
     const inst = createInstance(engine, settings);
-    const seedRun: SeedRun = { inst, souls: plan.souls > 0 ? createSoulRoller(engine, settings) : null, occ: new OccurrenceCollector() };
+    let souls: SoulRoller | null = null;
     try {
+      souls = plan.souls > 0 ? createSoulRoller(engine, settings) : null;
+      const seedRun: SeedRun = { inst, souls, occ: new OccurrenceCollector() };
       const due: Slot[] = [];
       for (let a = 1; a <= plan.horizon; a++) {
         for (let k = 0; k < STEP_ORDER.length; k++) {
           const step = STEP_ORDER[k] as StepId;
-          if (plan.through[step] >= a) steps[step](seedRun, a);
+          if (plan.through[step] >= a) rollStep(step, seedRun, a);
           const newlyDue = dueAfter.get(key(a, k));
           if (!newlyDue) continue;
           // Slots past their deadline have seen every candidate: if they can't all be matched now, they never will.
@@ -136,7 +118,7 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
       }
       return seedRun.occ;
     } finally {
-      seedRun.souls?.dispose();
+      souls?.dispose();
       inst.delete();
     }
   };

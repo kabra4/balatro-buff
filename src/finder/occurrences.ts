@@ -4,12 +4,12 @@
  */
 import type { Analysis, Item } from '../engine/types';
 import type { Occurrence } from './match';
-import { SLOT_KIND_IDS, SLOT_KINDS, type AnteSource, type ItemSource, type PackType } from './slotKinds';
+import { SLOT_KIND_IDS, SLOT_KINDS, type ItemSource } from './slotKinds';
+import { ANTE_SOURCE_IDS, ANTE_SOURCES, type AnteSource, type PackType } from './sources';
 import type { SlotKind } from './types';
 
 type KindSource = readonly [SlotKind, ItemSource];
 
-const TAG_PLACES = ['Small blind tag', 'Big blind tag'] as const;
 const ANTE_KINDS = anteKinds();
 const SHOP_KINDS: KindSource[] = SLOT_KIND_IDS.flatMap((kind) => {
   const shop = SLOT_KINDS[kind].occurrenceSources.shop;
@@ -21,12 +21,10 @@ export class OccurrenceCollector {
   readonly list: Occurrence[] = [];
   private nextId = 1;
 
-  voucher(ante: number, name: string): void {
-    this.anteValue(ante, 'voucher', name, 'Voucher');
-  }
-
-  tags(ante: number, tags: readonly [string, string]): void {
-    tags.forEach((name, i) => this.anteValue(ante, 'tags', name, TAG_PLACES[i] ?? 'Tag'));
+  /** The values one ante source rolled for `ante`, in place order. */
+  anteValues(ante: number, source: AnteSource, names: readonly string[]): void {
+    const places = ANTE_SOURCES[source].places;
+    names.forEach((name, i) => this.anteValue(ante, source, name, places[i] ?? source));
   }
 
   /** `index` is 0-based in the shop queue. */
@@ -61,9 +59,9 @@ export class OccurrenceCollector {
 /** Every occurrence in a full analysis (Souls must already be resolved, as `analyze` does). */
 export function occurrencesFrom(analysis: Analysis): Occurrence[] {
   const collector = new OccurrenceCollector();
-  for (const { ante, voucher, tags, shop, packs } of analysis.antes) {
-    collector.voucher(ante, voucher);
-    collector.tags(ante, tags);
+  for (const anteResult of analysis.antes) {
+    const { ante, shop, packs } = anteResult;
+    for (const source of ANTE_SOURCE_IDS) collector.anteValues(ante, source, ANTE_SOURCES[source].fromAnte(anteResult));
     shop.forEach((item, q) => collector.shopItem(ante, q, item));
     packs.forEach((pack, p) => {
       for (const item of pack.items) collector.packItem(ante, p, pack.name, pack.type, item);

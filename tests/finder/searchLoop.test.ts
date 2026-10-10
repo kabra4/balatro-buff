@@ -51,6 +51,27 @@ describe('search loop (worker side)', () => {
     expect(checked).toEqual([]);
   });
 
+  it('a second start on the same worker runs the new query (even while the old loop is parked)', async () => {
+    const posted: FinderWorkerResponse[] = [];
+    const other = query({}, [slot('tag', 'Double Tag', 1)]);
+    let n = 0;
+    const loop = createSearchLoop({
+      load: async () => ENGINE,
+      // The first query never hits; the second hits on its third seed.
+      createChecker: (_engine, q) => ({ check: () => q === other && ++n === 3 }),
+      post: (m) => posted.push(m),
+      randomSeed: () => `SEED${n}`,
+      now: () => 0,
+      yieldNow: () => new Promise((r) => setTimeout(r, 0)),
+    });
+    loops.push(loop);
+    loop.handle({ type: 'start', query: QUERY });
+    await settle();
+    loop.handle({ type: 'start', query: other });
+    await until(() => posted.some((m) => m.type === 'hit'));
+    expect(posted.filter((m) => m.type === 'hit')).toHaveLength(1);
+  });
+
   it('reports an engine load failure and retries on the next start', async () => {
     const loads = [Promise.reject(new Error('wasm 404')), Promise.resolve(ENGINE)];
     const { loop, posted } = setup({ seeds: ['HIT11111'], isHit: () => true, load: () => loads.shift()! });

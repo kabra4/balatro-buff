@@ -1,0 +1,65 @@
+README.md
+  s_6fed4ffbcc9754::t_aac2762f920ef2 37-39
+src/engine/analyze.ts
+  s_6fed4ffbcc9754::t_4a1cfd5137da6a 7,102-106,111-115,121,125,129-140,144,149-155
+src/engine/client.ts
+  s_6fed4ffbcc9754::t_f9e233fef25005 1,5-18,23-29,33,36,38-42,45,47-49,53,57,59-71,75-87,91-99,106-107,109,112-115
+src/engine/constants.ts
+  s_6fed4ffbcc9754::t_7b1e25cc9e46a1 123-127
+src/engine/engine.worker.ts
+  s_6fed4ffbcc9754::t_f0d66a4204e221 2,5-6,9,11-15,17-18
+src/engine/instance.ts
+  s_6fed4ffbcc9754::t_e6fbe8f065761d 2,12-36
+src/engine/protocol.ts
+  s_6fed4ffbcc9754::t_2d0f60d9b4a6d8 11-13
+src/engine/souls.ts
+  s_6fed4ffbcc9754::t_43c5adcee964ce 7-9,13,15,17,33,35-46
+src/engine/types.ts
+  s_6fed4ffbcc9754::t_ba59350b28f3ae 12,15-16
+src/engine/workerHandler.ts
+  s_6fed4ffbcc9754::t_712a15f15a5f67 1-63
+src/ui/ItemCard.tsx
+  s_6fed4ffbcc9754::t_9f11da33ffdf3d 3
+src/ui/SoulSummary.tsx
+  s_6fed4ffbcc9754::t_076d3f5df67355 2,32
+src/ui/filter.ts
+  s_6fed4ffbcc9754::t_a80f098b5cc442 4,47
+src/ui/liveAnalysis.ts
+  s_6fed4ffbcc9754::t_e7891ef67d72b0 1-60
+src/ui/soulText.ts
+  s_6fed4ffbcc9754::t_06567e5314f6af 1-9
+src/ui/useAnalysis.ts
+  s_6fed4ffbcc9754::t_e507438f86b2b3 4,15,22-42,47
+tests/client.test.ts
+  s_6fed4ffbcc9754::t_a2d35f1cbf9639 1-102
+tests/handles.test.ts
+  s_6fed4ffbcc9754::t_386e29b6d58051 1-111
+tests/liveAnalysis.test.ts
+  s_6fed4ffbcc9754::t_0237b90e91dfb0 1-101
+tests/loader.test.ts
+  s_6fed4ffbcc9754::t_e14fc30b7e7454 1-27
+tests/parity.test.ts
+  s_6fed4ffbcc9754::t_c149a77646fdb0 46-50,62-65,81-84
+tests/souls.test.ts
+  s_6fed4ffbcc9754::t_013908355c4060 4-6,43,75-102,114-125
+tests/url.test.ts
+  s_6fed4ffbcc9754::t_672c61cfe1fd9c 46-62
+tests/workerHandler.test.ts
+  s_6fed4ffbcc9754::t_6d9f87cc66a637 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c51462b3e1c4dc8d9d17d65dc4885154aaa295d5",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

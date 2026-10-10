@@ -2,13 +2,14 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-// Multi-page ready: add `finder: page('finder.html')` when the seed finder page lands.
-export default defineConfig({
+// `vitest run --mode bench` (npm run bench) runs the throughput benchmarks instead of the tests.
+export default defineConfig(({ mode }) => ({
   base: '/balatro-buff/',
   build: {
     rollupOptions: {
       input: {
         main: page('index.html'),
+        finder: page('finder.html'),
       },
     },
   },
@@ -17,10 +18,10 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
-    testTimeout: 30_000,
+    include: mode === 'bench' ? ['bench/**/*.bench.ts'] : ['tests/**/*.test.ts'],
+    testTimeout: mode === 'bench' ? 120_000 : 30_000,
   },
-});
+}));
 
 function page(file: string): string {
   return fileURLToPath(new URL(file, import.meta.url));

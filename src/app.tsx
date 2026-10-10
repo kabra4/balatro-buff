@@ -5,6 +5,7 @@ import { parse, serialize } from './state/url';
 import { AnteSection, countMatches } from './ui/AnteSection';
 import { EMPTY_FILTER, isFilterActive, type Filter } from './ui/filter';
 import { FilterBar } from './ui/FilterBar';
+import { NavLinks } from './ui/NavLinks';
 import { SettingsBar } from './ui/SettingsBar';
 import { SoulSummary } from './ui/SoulSummary';
 import { useAnalysis } from './ui/useAnalysis';
@@ -40,6 +41,7 @@ export function App() {
         <div class="brand">
           <h1>balatro-buff</h1>
           <span class="tagline">Balatro seed analyzer</span>
+          <NavLinks current="analyzer" />
         </div>
         <SettingsBar settings={settings} status={status} onChange={patch} />
       </header>

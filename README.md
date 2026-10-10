@@ -39,6 +39,20 @@ owned the pool is empty and Balatro falls back to a plain **Joker** — shown as
 "Joker (all legendaries owned)", with the edition still rolled. This uses a separate engine
 instance, so the shop/pack output is unaffected. It assumes you take every Soul you see.
 
+## Seed finder (`finder.html`)
+
+Describe what you want — jokers (name / edition / shop or packs), Souls (which legendary), spectral
+cards, vouchers, tags — each with a "by ante N" deadline, and hit **Search**. Web Workers try random
+seeds until one satisfies every requirement (each requirement needs its own card), then pause;
+**Find next** continues. Every match is re-checked with a full analysis before it is shown, and
+**Open in analyzer** opens it on the analyzer page. The query lives in the URL (`q=` plus the
+analyzer's settings params), so searches are shareable.
+
+Speed comes from only rolling the engine streams a query needs (e.g. a tag-only query never rolls a
+shop) and rejecting a seed as soon as a deadline can't be met — see `src/finder/plan.ts` for which
+streams are independent and why. A property test checks the fast path against full analysis on
+thousands of random seeds.
+
 ## Development
 
 Requires Node 22+.
@@ -50,6 +64,7 @@ npm test           # Vitest, runs the real wasm engine in Node
 npm run typecheck
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve dist/
+npm run bench      # finder throughput: fast path vs full analysis (seeds/s per thread)
 ```
 
 Layout:
@@ -58,8 +73,12 @@ Layout:
 - `src/engine/` — engine loader, Web Worker, the analysis port (`analyze.ts`), Soul resolution
   (`souls.ts`), and the TheSoul text formatter used for parity tests.
 - `src/state/` — default settings and URL (de)serialisation.
+- `src/finder/` — seed finder: slot-kind registry (`slotKinds.ts`), matching (`match.ts`), fast-path
+  plan + checker (`plan.ts`, `check.ts`), search worker and controller, URL state, UI (`ui/`).
 - `src/ui/` — Preact components, CSS sprite tables, filter logic.
-- `tests/` — parity against a verbatim port of TheSoul's text loop, Soul resolution, URL, filter, seed.
+- `tests/` — parity against a verbatim port of TheSoul's text loop, Soul resolution, URL, filter, seed;
+  `tests/finder/` — matching, plan, fast path ≡ full analysis, search loop/controller, finder URL.
+- `bench/` — `npm run bench`.
 
 Deploys to GitHub Pages from `main` via `.github/workflows/deploy.yml` (Pages source: GitHub Actions).
 

@@ -1,0 +1,345 @@
+/* Seed finder page — builds on the analyzer's styles.css (palette, buttons, fields, sprites). */
+
+.section-title {
+  margin: 4px 0 10px;
+  font-size: 1.5rem;
+  color: var(--gold);
+}
+
+/* ---------- Requirement slots ---------- */
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.slot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+}
+
+.slot-card[data-kind='soul'] {
+  border-color: var(--purple);
+}
+
+.slot-card.slot-invalid {
+  border-color: var(--red);
+}
+
+.slot-head {
+  display: flex;
+  gap: 6px;
+}
+
+.slot-kind {
+  flex: 1;
+  font-family: var(--pixel);
+  font-size: 1.1rem;
+}
+
+.slot-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slot-field select {
+  flex: 0 1 60%;
+}
+
+.slot-problem {
+  margin: 0;
+  color: var(--red);
+  font-size: 0.85rem;
+}
+
+.slot-add {
+  min-height: 120px;
+  border: 2px dashed var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--pixel);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.slot-add:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+/* ---------- Item picker ---------- */
+
+.picker {
+  position: relative;
+}
+
+.picker-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  min-height: 44px;
+  background: var(--bg-deep);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.picker-button.picker-empty {
+  border-color: var(--red);
+}
+
+.picker-label {
+  flex: 1;
+}
+
+.picker-caret {
+  color: var(--muted);
+}
+
+.picker-pop {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #000a;
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.picker-active {
+  background: var(--bg-deep);
+}
+
+.picker-option[aria-selected='true'] {
+  color: var(--gold);
+}
+
+.thumb-any {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 34px;
+  border: 2px dashed var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  font-family: var(--pixel);
+}
+
+/* ---------- Search controls ---------- */
+
+.search-controls {
+  margin: 16px 0 12px;
+}
+
+.search-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-alt {
+  background: var(--blue);
+}
+
+.btn-stop {
+  background: var(--panel-2);
+}
+
+.status-search-running,
+.status-search-verifying {
+  color: var(--gold);
+}
+
+.status-search-paused {
+  color: var(--green);
+}
+
+.status-search-error {
+  color: var(--red);
+}
+
+.search-stats {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.search-problems {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--red);
+}
+
+/* ---------- Result + history ---------- */
+
+.result {
+  background: linear-gradient(90deg, #3b2f58, var(--panel));
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.result-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.result-seed {
+  font-family: var(--pixel);
+  font-size: 2.4rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-shadow: 0 3px 0 #0008;
+  user-select: all;
+}
+
+.result-open {
+  color: var(--text);
+  text-decoration: none;
+  background: var(--blue);
+}
+
+.result-matches {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.match {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: var(--bg-deep);
+  border-radius: 8px;
+}
+
+.match-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.match-slot {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.match-found {
+  font-size: 0.95rem;
+}
+
+.history-title {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  color: var(--muted);
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4px 10px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.history-item.history-current {
+  border-color: var(--gold);
+}
+
+.history-seed {
+  font-family: var(--pixel);
+  font-size: 1.2rem;
+  color: var(--gold);
+}
+
+.history-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 760px) {
+  .finder-topbar {
+    position: static;
+  }
+
+  .finder-settings .field {
+    flex: 1 1 45%;
+    justify-content: space-between;
+  }
+
+  .finder-settings .field-check {
+    justify-content: flex-start;
+  }
+
+  .slot-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .result-seed {
+    font-size: 1.8rem;
+  }
+}

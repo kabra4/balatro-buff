@@ -10,10 +10,10 @@ export function normalizeSeed(raw: string): string {
     .slice(0, SEED_MAX_LENGTH);
 }
 
-export function randomSeed(random: () => number = Math.random): string {
+export function randomSeed(random: () => number = Math.random, alphabet: string = SEED_ALPHABET): string {
   let seed = '';
   for (let i = 0; i < SEED_MAX_LENGTH; i++) {
-    seed += SEED_ALPHABET[Math.floor(random() * SEED_ALPHABET.length)];
+    seed += alphabet[Math.floor(random() * alphabet.length)];
   }
   return seed;
 }

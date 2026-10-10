@@ -52,6 +52,14 @@ export interface PackInfoHandle extends EmHandle {
   choices: number;
 }
 
+export interface ShopInstanceHandle extends EmHandle {
+  jokerRate: number;
+  tarotRate: number;
+  planetRate: number;
+  playingCardRate: number;
+  spectralRate: number;
+}
+
 export interface InstParamsHandle extends EmHandle {
   deck: string;
   stake: string;
@@ -64,6 +72,10 @@ export interface EngineInstance extends EmHandle {
   lock(item: string): void;
   unlock(item: string): void;
   isLocked(item: string): boolean;
+  /** Advances the keyed RNG stream `id` and returns its next float in [0, 1). */
+  random(id: string): number;
+  /** Shop item-type rates for the current deck / active vouchers. */
+  getShopInstance(): ShopInstanceHandle;
   initLocks(ante: number, freshProfile: boolean, freshRun: boolean): void;
   initUnlocks(ante: number, freshProfile: boolean): void;
   setStake(stake: string): void;
@@ -79,6 +91,7 @@ export interface EngineInstance extends EmHandle {
   nextBuffoonPack(size: number, ante: number): EmVector<JokerDataHandle>;
   nextStandardPack(size: number, ante: number): EmVector<CardHandle>;
   nextJoker(source: string, ante: number, hasStickers: boolean): JokerDataHandle;
+  nextSpectral(source: string, ante: number, soulable: boolean): string;
 }
 
 export interface ImmolateModule {

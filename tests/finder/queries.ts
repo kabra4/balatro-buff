@@ -60,6 +60,9 @@ export const QUERIES: Record<string, FinderQuery> = {
     slot('joker', 'Perkeo', 6, { edition: 'none' }),
     slot('joker', 'Joker', 2),
   ]),
+  'soul edition: Foil soul by 8, Erratic Deck': query({ deck: 'Erratic Deck', cardsPerAnte: 10 }, [
+    slot('soul', null, 8, { edition: 'Foil' }),
+  ]),
   'deep shop: Blueprint by 8, 50 cards, Black Stake': query({ stake: 'Black Stake', cardsPerAnte: 50, deck: 'Plasma Deck' }, [
     slot('joker', 'Blueprint', 8),
     slot('soul', 'Perkeo', 8, { where: 'packs' }),

@@ -44,7 +44,9 @@ instance, so the shop/pack output is unaffected. It assumes you take every Soul 
 Describe what you want — jokers (name / edition / shop or packs), Souls (which legendary, edition), spectral
 cards, vouchers, tags — each with a "by ante N" deadline, and hit **Search**. Web Workers try random
 seeds until one satisfies every requirement (each requirement needs its own card), then pause;
-**Find next** continues. Every match is re-checked with a full analysis before it is shown, and
+**Find next** continues. Early shops are capped for the finder — only the first 10 shop cards of
+ante 1 and 30 of ante 2 count, since there's little money to reroll that early.
+Every match is re-checked with a full analysis before it is shown, and
 **Open in analyzer** opens it on the analyzer page. The query lives in the URL (`q=` plus the
 analyzer's settings params), so searches are shareable.
 

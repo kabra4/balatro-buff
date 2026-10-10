@@ -11,7 +11,7 @@ import type { Analysis } from '../engine/types';
 import { matchSlots, type Occurrence } from './match';
 import { OccurrenceCollector, occurrencesFrom } from './occurrences';
 import { buildPlan, STEP_ORDER, type Plan, type StepId } from './plan';
-import { seedSettings } from './query';
+import { FINDER_SHOP_CAPS, seedSettings } from './query';
 import { ANTE_SOURCE_IDS, ANTE_SOURCES, SHOP_READERS, type AnteRoller, type AnteSource, type PackType, type ShopItemType } from './sources';
 import type { FinderQuery, Slot } from './types';
 
@@ -87,7 +87,7 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
 
   const rollShop = ({ inst, occ }: SeedRun, a: number): void => {
     rates ??= shopRates(inst);
-    const count = cardsForAnte(a, query.settings.cardsPerAnte);
+    const count = cardsForAnte(a, query.settings.cardsPerAnte, FINDER_SHOP_CAPS);
     const cdt = `cdt${a}`;
     for (let q = 0; q < count; q++) {
       const type = shopType(inst.random(cdt), rates);

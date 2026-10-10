@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { CopyLinkButton } from '../../ui/CopyLinkButton';
 import { NavLinks } from '../../ui/NavLinks';
 import { SettingsFields, type SelectKey } from '../../ui/SettingsFields';
+import { FINDER_SHOP_CAPS } from '../query';
 import type { VerifiedHit } from '../searchController';
 import { blankSlot, slotProblem } from '../slotKinds';
 import type { FinderQuery, FinderSettings, Slot } from '../types';
@@ -51,6 +52,7 @@ export function FinderApp() {
       <main class="content">
         <section class="requirements" aria-label="Requirements">
           <h2 class="section-title">Find a seed with…</h2>
+          <p class="section-note">{shopCapsNote(query.settings.cardsPerAnte)}</p>
           <div class="slot-grid">
             {query.slots.map((slot) => (
               <SlotCard
@@ -116,4 +118,10 @@ function useResetOnChange(query: FinderQuery, status: string, reset: () => void)
     previous.current = key;
     if (status !== 'idle') reset();
   }, [key]);
+}
+
+/** e.g. "Shop: first 10 cards in ante 1, 30 in ante 2, 50 per ante after." */
+function shopCapsNote(cardsPerAnte: number): string {
+  const capped = Object.entries(FINDER_SHOP_CAPS).map(([ante, cap]) => `${Math.min(cap, cardsPerAnte)} in ante ${ante}`);
+  return `Shop: only the first ${capped.join(', ')} count (little money to reroll early), then ${cardsPerAnte} per ante.`;
 }

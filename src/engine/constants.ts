@@ -126,3 +126,25 @@ export const LEGENDARY_JOKERS = ['Canio', 'Triboulet', 'Yorick', 'Chicot', 'Perk
 export const EMPTY_POOL_JOKER = 'Joker';
 
 export const SOUL_CARD = 'The Soul';
+
+/** Every Spectral card, incl. the two that also show up in Arcana / Celestial packs (engine SPECTRALS + those two). */
+export const SPECTRAL_CARDS = [
+  'Familiar',
+  'Grim',
+  'Incantation',
+  'Talisman',
+  'Aura',
+  'Wraith',
+  'Sigil',
+  'Ouija',
+  'Ectoplasm',
+  'Immolate',
+  'Ankh',
+  'Deja Vu',
+  'Hex',
+  'Trance',
+  'Medium',
+  'Cryptid',
+  'The Soul',
+  'Black Hole',
+] as const;

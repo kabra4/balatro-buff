@@ -706,3 +706,30 @@ summary:focus-visible {
     display: none;
   }
 }
+
+/* ---------- Page nav (analyzer ⇄ finder) ---------- */
+
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.nav-link {
+  font-family: var(--pixel);
+  font-size: 1rem;
+  padding: 1px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  background: var(--bg-deep);
+}
+
+.nav-link:hover {
+  color: var(--text);
+}
+
+.nav-current {
+  color: #fff;
+  background: var(--red);
+}

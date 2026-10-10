@@ -13,7 +13,7 @@
 import { EMPTY_POOL_JOKER, LEGENDARY_JOKERS, SOUL_CARD } from './constants';
 import { toEdition } from './editions';
 import { createInstance, withHandle } from './instance';
-import type { ImmolateModule } from './loader';
+import type { EngineInstance, ImmolateModule } from './loader';
 import type { AnteResult, ConsumableKind, Item, Settings, SoulLocation, SoulResult } from './types';
 
 type ConsumableItem = Extract<Item, { kind: ConsumableKind }>;
@@ -24,32 +24,62 @@ interface SoulSite {
   where: string;
 }
 
+export interface SoulRoller {
+  /** Resolves the next Soul (call in order of appearance) found in `ante`. */
+  roll(ante: number): SoulResult;
+  /** Deletes the roller's Instance (if one was created). Idempotent. */
+  dispose(): void;
+}
+
 /** Sets `item.soul` on every Soul card in `antes` (mutates) and returns the Souls in order. */
 export function resolveSouls(engine: ImmolateModule, s: Settings, antes: AnteResult[]): SoulLocation[] {
   const sites = findSoulSites(antes);
   if (sites.length === 0) return [];
-  const inst = createInstance(engine, s);
+  const roller = createSoulRoller(engine, s);
   try {
-    const owned = new Set<string>();
-    return sites.map(({ ante, item, where }, i) => {
+    return sites.map(({ ante, item, where }) => {
+      const soul = roller.roll(ante);
+      item.soul = soul;
+      return { ...soul, ante, where };
+    });
+  } finally {
+    roller.dispose();
+  }
+}
+
+/**
+ * Incremental Soul resolution on its own Instance (created lazily on the first roll), so a caller
+ * can resolve Souls ante by ante as it finds them — same results as `resolveSouls`.
+ */
+export function createSoulRoller(engine: ImmolateModule, s: Settings): SoulRoller {
+  let inst: EngineInstance | null = null;
+  let disposed = false;
+  let count = 0;
+  const owned = new Set<string>();
+  return {
+    roll: (ante) => {
+      if (disposed) throw new Error('SoulRoller used after dispose');
+      inst ??= createInstance(engine, s);
       const allOwned = !s.showman && LEGENDARY_JOKERS.every((name) => owned.has(name));
       const roll = withHandle(inst.nextJoker('sou', ante, false), (jd) => ({
         legendary: jd.joker,
         edition: toEdition(jd.edition),
       }));
-      const soul: SoulResult = allOwned
-        ? { index: i + 1, legendary: EMPTY_POOL_JOKER, edition: roll.edition, allOwned: true }
-        : { index: i + 1, ...roll };
+      count++;
       if (!s.showman && !allOwned) {
         inst.lock(roll.legendary);
         owned.add(roll.legendary);
       }
-      item.soul = soul;
-      return { ...soul, ante, where };
-    });
-  } finally {
-    inst.delete();
-  }
+      return allOwned
+        ? { index: count, legendary: EMPTY_POOL_JOKER, edition: roll.edition, allOwned: true }
+        : { index: count, ...roll };
+    },
+    dispose: () => {
+      disposed = true;
+      inst?.delete();
+      inst = null;
+    },
+  };
 }
 
 export function isSoulCard(item: Item): item is ConsumableItem {

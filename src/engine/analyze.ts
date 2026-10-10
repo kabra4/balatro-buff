@@ -36,25 +36,77 @@ const ALWAYS_SPECTRAL = new Set([SOUL_CARD, 'Black Hole']);
 const RANKS: Record<string, string> = { T: '10', J: 'Jack', Q: 'Queen', K: 'King', A: 'Ace' };
 const SUITS: Record<string, string> = { C: 'Clubs', S: 'Spades', D: 'Diamonds', H: 'Hearts' };
 
+export interface AnalysisStepper {
+  /** Analyzes the next ante (1, 2, …), or returns null once `maxAnte` is done. */
+  next(): AnteResult | null;
+  /** Deletes the engine Instance. Idempotent. */
+  dispose(): void;
+}
+
+/** Rolls the voucher for `ante`, locks it and unlocks its upgrade (when the profile has it). */
+export type VoucherRoller = (inst: EngineInstance, ante: number) => string;
+
 export function cardsForAnte(ante: number, cardsPerAnte: number): number {
   return ante === 1 ? Math.min(SHOP_CARDS_ANTE_1_CAP, cardsPerAnte) : cardsPerAnte;
 }
 
+export function packsForAnte(ante: number): number {
+  return ante === 1 ? 4 : 6;
+}
+
 export function analyze(engine: ImmolateModule, s: Settings): Analysis {
   const settings: Settings = { ...s, seed: normalizeSeed(s.seed), locked: [...s.locked] };
-  const inst = createInstance(engine, settings);
+  const stepper = createAnalysisStepper(engine, settings);
+  const antes: AnteResult[] = [];
   try {
-    const upgrades = voucherUpgrades(engine);
-    const locked = new Set(settings.locked);
-    const antes: AnteResult[] = [];
-    for (let a = 1; a <= settings.maxAnte; a++) {
-      antes.push(analyzeAnte(engine, inst, a, settings, upgrades, locked));
-    }
-    const souls = resolveSouls(engine, settings, antes);
-    return { settings, antes, souls };
+    for (let ante = stepper.next(); ante !== null; ante = stepper.next()) antes.push(ante);
   } finally {
-    inst.delete();
+    stepper.dispose();
   }
+  const souls = resolveSouls(engine, settings, antes);
+  return { settings, antes, souls };
+}
+
+/** Ante-by-ante analysis on one Instance (TheSoul's call order). Souls are not resolved here. */
+export function createAnalysisStepper(engine: ImmolateModule, s: Settings): AnalysisStepper {
+  const settings: Settings = { ...s, seed: normalizeSeed(s.seed) };
+  let inst: EngineInstance | null = createInstance(engine, settings);
+  try {
+    const rollVoucher = createVoucherRoller(engine, settings.locked);
+    let ante = 0;
+    return {
+      next: () => {
+        if (inst === null || ante >= settings.maxAnte) return null;
+        ante++;
+        return analyzeAnte(engine, inst, ante, settings, rollVoucher);
+      },
+      dispose: () => {
+        inst?.delete();
+        inst = null;
+      },
+    };
+  } catch (err) {
+    inst?.delete();
+    throw err;
+  }
+}
+
+export function createVoucherRoller(engine: ImmolateModule, lockedNames: readonly string[]): VoucherRoller {
+  const upgrades = voucherUpgrades(engine);
+  const locked = new Set(lockedNames);
+  return (inst, ante) => {
+    const voucher = inst.nextVoucher(ante);
+    inst.lock(voucher);
+    const upgrade = upgrades.get(voucher);
+    if (upgrade !== undefined && isUnlockable(upgrade, locked)) inst.unlock(upgrade);
+    return voucher;
+  };
+}
+
+/** Rolls the contents of a pack of base `type` (from `packInfo`). Unknown types yield no cards, like TheSoul. */
+export function readPackItems(inst: EngineInstance, type: string, size: number, ante: number): Item[] {
+  const reader = PACK_READERS[type];
+  return reader ? reader(inst, size, ante) : [];
 }
 
 function analyzeAnte(
@@ -62,15 +114,11 @@ function analyzeAnte(
   inst: EngineInstance,
   a: number,
   s: Settings,
-  upgrades: Map<string, string>,
-  locked: Set<string>,
+  rollVoucher: VoucherRoller,
 ): AnteResult {
   inst.initUnlocks(a, false);
   const boss = inst.nextBoss(a);
-  const voucher = inst.nextVoucher(a);
-  inst.lock(voucher);
-  const upgrade = upgrades.get(voucher);
-  if (upgrade !== undefined && isUnlockable(upgrade, locked)) inst.unlock(upgrade);
+  const voucher = rollVoucher(inst, a);
   const tag1 = inst.nextTag(a);
   const tag2 = inst.nextTag(a);
 
@@ -113,8 +161,7 @@ function readPack(engine: ImmolateModule, inst: EngineInstance, a: number): Pack
     size: info.size,
     choices: info.choices,
   }));
-  const reader = PACK_READERS[type];
-  return { name, type, size, choices, items: reader ? reader(inst, size, a) : [] };
+  return { name, type, size, choices, items: readPackItems(inst, type, size, a) };
 }
 
 function readConsumables(vec: EmVector<string>, kind: ConsumableKind): Item[] {
@@ -155,8 +202,4 @@ function vectorItems<T>(vec: EmVector<T>, read: (value: T) => Item): Item[] {
 
 function consumable(name: string, fallback: ConsumableKind): Item {
   return { kind: ALWAYS_SPECTRAL.has(name) ? 'spectral' : fallback, name };
-}
-
-function packsForAnte(ante: number): number {
-  return ante === 1 ? 4 : 6;
 }

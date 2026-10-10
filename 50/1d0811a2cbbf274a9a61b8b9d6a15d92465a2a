@@ -1,0 +1,107 @@
+src/engine/analyze.ts
+  s_6fed4ffbcc9754::t_990c7c40eb9d77 1-173,176-177
+  s_6fed4ffbcc9754::t_ff96c6372460de 174-175
+src/ui/sprites.ts
+  s_6fed4ffbcc9754::t_6c8d583ad6032f 1-156,158
+  s_6fed4ffbcc9754::t_28a056005818d1 157,159-162
+src/styles.css
+  s_6fed4ffbcc9754::t_bfcd47153d17ae 1-708
+src/engine/loader.ts
+  s_6fed4ffbcc9754::t_9aadd2b1329ac0 1-135
+src/engine/types.ts
+  s_6fed4ffbcc9754::t_8e1cd5444ac77b 1-77
+.github/workflows/deploy.yml
+  s_6fed4ffbcc9754::t_6e45fc41bc70e7 1-42
+.gitignore
+  s_6fed4ffbcc9754::t_11979443f51835 1-5
+README.md
+  s_6fed4ffbcc9754::t_0172f649537a66 1-72
+index.html
+  s_6fed4ffbcc9754::t_b5b006912e5df6 1-14
+package-lock.json
+  s_6fed4ffbcc9754::t_056db4cfeec546 1-1499
+package.json
+  s_6fed4ffbcc9754::t_913faf7f7bcc6d 1-26
+public/engine/immolate.js
+  s_6fed4ffbcc9754::t_7103bc5ea711e9 1-54
+src/app.tsx
+  s_6fed4ffbcc9754::t_cdb3a748b46d6a 1-112
+src/engine/client.ts
+  s_6fed4ffbcc9754::t_5d1d679f7bbfe9 1-65
+src/engine/constants.ts
+  s_6fed4ffbcc9754::t_bc639500bfe58c 1-123
+src/engine/editions.ts
+  s_6fed4ffbcc9754::t_04886f563c8b0d 1-14
+src/engine/engine.worker.ts
+  s_6fed4ffbcc9754::t_4038abc07c5bac 1-31
+src/engine/format.ts
+  s_6fed4ffbcc9754::t_afe360bb9a0240 1-44
+src/engine/instance.ts
+  s_6fed4ffbcc9754::t_ae5c8e069cc948 1-24
+src/engine/protocol.ts
+  s_6fed4ffbcc9754::t_f79385b964938f 1-11
+src/engine/seed.ts
+  s_6fed4ffbcc9754::t_f7620575c2cf5e 1-19
+src/engine/souls.ts
+  s_6fed4ffbcc9754::t_fbad01092f811e 1-60
+src/main.tsx
+  s_6fed4ffbcc9754::t_ba7c61a3d78fed 1-6
+src/state/settings.ts
+  s_6fed4ffbcc9754::t_2d43419cf7ac87 1-16
+src/state/url.ts
+  s_6fed4ffbcc9754::t_37663012147de1 1-77
+src/ui/AnteSection.tsx
+  s_6fed4ffbcc9754::t_82a770ff6cc2ce 1-103
+src/ui/FilterBar.tsx
+  s_6fed4ffbcc9754::t_7475cef99f82d7 1-51
+src/ui/ItemCard.tsx
+  s_6fed4ffbcc9754::t_4ce09d37a9e63f 1-70
+src/ui/SettingsBar.tsx
+  s_6fed4ffbcc9754::t_4f743df9208002 1-132
+src/ui/SoulSummary.tsx
+  s_6fed4ffbcc9754::t_302a11d25470d8 1-39
+src/ui/Sprite.tsx
+  s_6fed4ffbcc9754::t_8a2e008d936ec5 1-35
+src/ui/UnlocksModal.tsx
+  s_6fed4ffbcc9754::t_67a3ad5bf55b7f 1-79
+src/ui/filter.ts
+  s_6fed4ffbcc9754::t_83ce3672fcc7f2 1-68
+src/ui/spriteTables.ts
+  s_6fed4ffbcc9754::t_e6f060c99cc484 1-305
+src/ui/useAnalysis.ts
+  s_6fed4ffbcc9754::t_cee8bfb4003fa3 1-63
+tests/filter.test.ts
+  s_6fed4ffbcc9754::t_444ea362b30f35 1-55
+tests/helpers/engine.ts
+  s_6fed4ffbcc9754::t_64824383a46156 1-15
+tests/helpers/theSoulReference.ts
+  s_6fed4ffbcc9754::t_6ef10cdd00d49f 1-165
+tests/parity.test.ts
+  s_6fed4ffbcc9754::t_ce0abbb96f9be2 1-78
+tests/seed.test.ts
+  s_6fed4ffbcc9754::t_ac5d10f0aa6f7e 1-30
+tests/souls.test.ts
+  s_6fed4ffbcc9754::t_16dbd9416fcd50 1-110
+tests/url.test.ts
+  s_6fed4ffbcc9754::t_929d555d674e66 1-57
+tsconfig.json
+  s_6fed4ffbcc9754::t_53645ac3a2d7f9 1-21
+vite.config.ts
+  s_6fed4ffbcc9754::t_961cd59438a3e2 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "501d0811a2cbbf274a9a61b8b9d6a15d92465a2a",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

@@ -10,7 +10,7 @@ const FULL: FinderQuery = {
   settings: { deck: 'Ghost Deck', stake: 'Gold Stake', version: 10014, cardsPerAnte: 25, showman: true, locked: ['Negative Tag', 'Blueprint'] },
   slots: [
     { id: 'slot-1', kind: 'joker', item: 'Blueprint', edition: 'Negative', where: 'shop', byAnte: 3 },
-    { id: 'slot-2', kind: 'soul', item: null, edition: 'any', where: 'packs', byAnte: 2 },
+    { id: 'slot-2', kind: 'soul', item: null, edition: 'Polychrome', where: 'packs', byAnte: 2 },
     { id: 'slot-3', kind: 'spectral', item: 'Black Hole', edition: 'any', where: 'any', byAnte: 8 },
     { id: 'slot-4', kind: 'voucher', item: "Director's Cut", edition: 'any', where: 'any', byAnte: 1 },
     { id: 'slot-5', kind: 'tag', item: 'Charm Tag', edition: 'any', where: 'any', byAnte: 4 },

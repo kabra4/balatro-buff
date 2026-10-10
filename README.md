@@ -41,7 +41,7 @@ instance, so the shop/pack output is unaffected. It assumes you take every Soul 
 
 ## Seed finder (`finder.html`)
 
-Describe what you want — jokers (name / edition / shop or packs), Souls (which legendary), spectral
+Describe what you want — jokers (name / edition / shop or packs), Souls (which legendary, edition), spectral
 cards, vouchers, tags — each with a "by ante N" deadline, and hit **Search**. Web Workers try random
 seeds until one satisfies every requirement (each requirement needs its own card), then pause;
 **Find next** continues. Every match is re-checked with a full analysis before it is shown, and

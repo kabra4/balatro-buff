@@ -84,7 +84,7 @@ export const SLOT_KINDS: Readonly<Record<SlotKind, SlotKindSpec>> = {
     itemLayers: jokerLayers,
     allowsAny: true,
     anyLabel: 'Any legendary',
-    hasEdition: false,
+    hasEdition: true,
     hasWhere: true,
     occurrenceSources: { packs: { 'Arcana Pack': soulSource, 'Spectral Pack': soulSource } },
   },

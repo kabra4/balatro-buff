@@ -42,6 +42,16 @@ describe('slotAccepts', () => {
     expect(slotAccepts(slot({ kind: 'joker', edition: 'Negative' }), foil)).toBe(false);
   });
 
+  it('matches a Soul slot by the edition of the legendary it yields', () => {
+    const [soul] = soulCard('Perkeo', 2, 'Negative');
+    expect(slotAccepts(slot({ kind: 'soul', item: 'Perkeo', edition: 'Negative' }), soul!)).toBe(true);
+    expect(slotAccepts(slot({ kind: 'soul', item: null, edition: 'Negative' }), soul!)).toBe(true);
+    expect(slotAccepts(slot({ kind: 'soul', item: 'Perkeo', edition: 'Polychrome' }), soul!)).toBe(false);
+    expect(slotAccepts(slot({ kind: 'soul', item: null, edition: 'none' }), soul!)).toBe(false);
+    const [plainSoul] = soulCard('Canio', 3);
+    expect(slotAccepts(slot({ kind: 'soul', item: null, edition: 'none' }), plainSoul!)).toBe(true);
+  });
+
   it('matches where for kinds that have it, ignores it for vouchers/tags', () => {
     const inPack = occ({ kind: 'spectral', name: 'Grim', where: 'packs' });
     expect(slotAccepts(slot({ kind: 'spectral', where: 'packs' }), inPack)).toBe(true);
@@ -52,8 +62,8 @@ describe('slotAccepts', () => {
   });
 
   it('ignores edition for kinds without it', () => {
-    const soul = soulCard('Perkeo', 2, 'Negative')[0]!;
-    expect(slotAccepts(slot({ kind: 'soul', edition: 'none' }), soul)).toBe(true);
+    const grim = occ({ kind: 'spectral', name: 'Grim', where: 'packs' });
+    expect(slotAccepts(slot({ kind: 'spectral', edition: 'Foil' }), grim)).toBe(true);
   });
 });
 

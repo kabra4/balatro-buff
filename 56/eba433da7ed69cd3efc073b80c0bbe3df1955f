@@ -1,0 +1,49 @@
+bench/finder.bench.ts
+  s_6fed4ffbcc9754::t_76d78c591bd13a 22
+src/finder/check.ts
+  s_6fed4ffbcc9754::t_1fc58ec566d061 6,10,15,62-64,68-71,103,105-106,111,121
+src/finder/occurrences.ts
+  s_6fed4ffbcc9754::t_dc857461ee70af 7-8,24-27,62-64
+src/finder/plan.ts
+  s_6fed4ffbcc9754::t_e82f639b411d2b 7-8,22-24,27,29-30,33-36,38,70,83,87-89,91,93-96,102-108
+src/finder/searchController.ts
+  s_6fed4ffbcc9754::t_857b2f5ef959c5 25-26,75,199-200,210
+src/finder/searchLoop.ts
+  s_6fed4ffbcc9754::t_049fcc66933ab1 54-58,62,109,125
+src/finder/slotKinds.ts
+  s_6fed4ffbcc9754::t_dcaa72281ec219 10,41-47,63-64,77-78,129-140,153-157,165-172
+src/finder/sources.ts
+  s_6fed4ffbcc9754::t_c609f513d91b30 1-76
+src/finder/ui/HistoryList.tsx
+  s_6fed4ffbcc9754::t_a1464ca3467ad2 17
+src/finder/ui/SlotCard.tsx
+  s_6fed4ffbcc9754::t_391cb710bc5123 70
+tests/finder/fastPath.test.ts
+  s_6fed4ffbcc9754::t_480b9fbd72bdea 4-8,11-12,22-23,28,31-32,37-40,43-53,55,59-67,75-81
+tests/finder/plan.test.ts
+  s_6fed4ffbcc9754::t_f5d994fc6361ab 2,33-48
+tests/finder/queries.ts
+  s_6fed4ffbcc9754::t_b8c8b07ecc1c75 59-62
+tests/finder/registry.test.ts
+  s_6fed4ffbcc9754::t_9acbd106d2dbec 24-46,61,63-67
+tests/finder/searchController.test.ts
+  s_6fed4ffbcc9754::t_43ebe5ea29672c 82-103
+tests/finder/searchLoop.test.ts
+  s_6fed4ffbcc9754::t_156a23c522ee2f 54-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "56eba433da7ed69cd3efc073b80c0bbe3df1955f",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

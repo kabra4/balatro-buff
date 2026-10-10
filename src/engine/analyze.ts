@@ -8,9 +8,7 @@ import { createInstance, withHandle } from './instance';
 import type { CardHandle, EmVector, EngineInstance, ImmolateModule, JokerDataHandle } from './loader';
 import { normalizeSeed } from './seed';
 import { resolveSouls } from './souls';
-import type { Analysis, AnteResult, ConsumableKind, Item, Pack, Settings } from './types';
-
-const SHOP_CARDS_ANTE_1_CAP = 15;
+import type { Analysis, AnteResult, ConsumableKind, Item, Pack, Settings, ShopCaps } from './types';
 
 type PackReader = (inst: EngineInstance, size: number, ante: number) => Item[];
 
@@ -36,6 +34,9 @@ const ALWAYS_SPECTRAL = new Set([SOUL_CARD, 'Black Hole']);
 const RANKS: Record<string, string> = { T: '10', J: 'Jack', Q: 'Queen', K: 'King', A: 'Ace' };
 const SUITS: Record<string, string> = { C: 'Clubs', S: 'Spades', D: 'Diamonds', H: 'Hearts' };
 
+/** TheSoul's cap: 15 shop cards in ante 1. */
+export const ANALYZER_SHOP_CAPS: ShopCaps = { 1: 15 };
+
 export interface AnalysisStepper {
   /** Analyzes the next ante (1, 2, …), or returns null once `maxAnte` is done. */
   next(): AnteResult | null;
@@ -46,8 +47,9 @@ export interface AnalysisStepper {
 /** Rolls the voucher for `ante`, locks it and unlocks its upgrade (when the profile has it). */
 export type VoucherRoller = (inst: EngineInstance, ante: number) => string;
 
-export function cardsForAnte(ante: number, cardsPerAnte: number): number {
-  return ante === 1 ? Math.min(SHOP_CARDS_ANTE_1_CAP, cardsPerAnte) : cardsPerAnte;
+/** Shop cards rolled in `ante`: the Cards/ante setting, capped per ante by `caps`. */
+export function cardsForAnte(ante: number, cardsPerAnte: number, caps: ShopCaps = ANALYZER_SHOP_CAPS): number {
+  return Math.min(caps[ante] ?? cardsPerAnte, cardsPerAnte);
 }
 
 export function packsForAnte(ante: number): number {
@@ -123,7 +125,7 @@ function analyzeAnte(
   const tag2 = inst.nextTag(a);
 
   const shop: Item[] = [];
-  const shopSize = cardsForAnte(a, s.cardsPerAnte);
+  const shopSize = cardsForAnte(a, s.cardsPerAnte, s.shopCaps);
   for (let q = 1; q <= shopSize; q++) shop.push(readShopItem(inst, a));
 
   const packs: Pack[] = [];

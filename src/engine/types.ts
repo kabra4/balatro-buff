@@ -55,6 +55,9 @@ export interface AnteResult {
   packs: Pack[];
 }
 
+/** Max shop cards per ante (ante → cap); antes not listed use the Cards/ante setting as is. */
+export type ShopCaps = Readonly<Record<number, number>>;
+
 export interface Settings {
   seed: string;
   deck: string;
@@ -65,6 +68,8 @@ export interface Settings {
   showman: boolean;
   /** Items from the Unlocks list the player has NOT unlocked yet. */
   locked: string[];
+  /** Per-ante shop card caps; defaults to the analyzer's (TheSoul) caps. Not stored in the URL. */
+  shopCaps?: ShopCaps;
 }
 
 export interface SoulLocation extends SoulResult {

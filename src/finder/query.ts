@@ -1,7 +1,10 @@
-import type { Settings } from '../engine/types';
+import type { Settings, ShopCaps } from '../engine/types';
 import { DEFAULT_SETTINGS } from '../state/settings';
 import { serialize } from '../state/url';
 import type { FinderQuery } from './types';
+
+/** Early antes have little money for rerolls: only the first 10 (ante 1) / 30 (ante 2) shop cards count. */
+export const FINDER_SHOP_CAPS: ShopCaps = { 1: 10, 2: 30 };
 
 /** Highest deadline among the slots — the number of antes a check needs. */
 export function horizonOf(query: FinderQuery): number {
@@ -10,7 +13,7 @@ export function horizonOf(query: FinderQuery): number {
 
 /** Analyzer settings for `seed` under `query`, analyzing through the query's horizon. */
 export function seedSettings(query: FinderQuery, seed: string): Settings {
-  return { ...query.settings, locked: [...query.settings.locked], seed, maxAnte: horizonOf(query) };
+  return { ...query.settings, locked: [...query.settings.locked], seed, maxAnte: horizonOf(query), shopCaps: FINDER_SHOP_CAPS };
 }
 
 /** Page-1 link (page-1 URL format) showing `seed` with the query's settings and the analyzer's default antes. */

@@ -733,3 +733,9 @@ summary:focus-visible {
   color: #fff;
   background: var(--red);
 }
+
+.section-note {
+  margin: -0.25rem 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

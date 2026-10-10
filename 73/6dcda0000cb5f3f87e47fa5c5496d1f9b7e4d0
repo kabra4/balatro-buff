@@ -1,0 +1,115 @@
+README.md
+  s_6fed4ffbcc9754::t_d6801d6a69d08e 42-55,67,76-77,79-81
+bench/finder.bench.ts
+  s_6fed4ffbcc9754::t_bba8993817c52f 1-82
+finder.html
+  s_6fed4ffbcc9754::t_1fab0fe4025701 1-14
+package.json
+  s_6fed4ffbcc9754::t_254a09d665f918 12
+src/app.tsx
+  s_6fed4ffbcc9754::t_4da27f2ee05f3e 8,44
+src/engine/analyze.ts
+  s_6fed4ffbcc9754::t_0692f140f5917f 39-48,53-56,59-60,62,64-90,94-111,117,121,164
+src/engine/constants.ts
+  s_6fed4ffbcc9754::t_7134acdd0fbeab 129-150
+src/engine/loader.ts
+  s_6fed4ffbcc9754::t_a6d7e4884bb8f9 55-62,75-78,94
+src/engine/seed.ts
+  s_6fed4ffbcc9754::t_4e99bd6872ee03 13,16
+src/engine/souls.ts
+  s_6fed4ffbcc9754::t_580ba3fdef0642 16,27-33,38,40-62,68,73-82
+src/finder/check.ts
+  s_6fed4ffbcc9754::t_8ea650b9d09d4c 1-199
+src/finder/finder.worker.ts
+  s_6fed4ffbcc9754::t_4edf454f391d4b 1-29
+src/finder/main.tsx
+  s_6fed4ffbcc9754::t_8fa440cecd62a1 1-7
+src/finder/match.ts
+  s_6fed4ffbcc9754::t_c4eae8173f3846 1-81
+src/finder/occurrences.ts
+  s_6fed4ffbcc9754::t_7f8a5ff3c2fdc8 1-92
+src/finder/plan.ts
+  s_6fed4ffbcc9754::t_42739d9acb2d3f 1-113
+src/finder/protocol.ts
+  s_6fed4ffbcc9754::t_f3a33361fa084d 1-15
+src/finder/query.ts
+  s_6fed4ffbcc9754::t_1980b114b81356 1-19
+src/finder/searchController.ts
+  s_6fed4ffbcc9754::t_40122c3f979f4c 1-269
+src/finder/searchLoop.ts
+  s_6fed4ffbcc9754::t_fa3ef0f07f35bb 1-125
+src/finder/seeds.ts
+  s_6fed4ffbcc9754::t_e1a76010579e2b 1-8
+src/finder/slotKinds.ts
+  s_6fed4ffbcc9754::t_759f42f08bbea6 1-171
+src/finder/types.ts
+  s_6fed4ffbcc9754::t_b5c3000fd2b72a 1-28
+src/finder/ui/FinderApp.tsx
+  s_6fed4ffbcc9754::t_32c2fed50e55bb 1-119
+src/finder/ui/HistoryList.tsx
+  s_6fed4ffbcc9754::t_5396a799c5f186 1-29
+src/finder/ui/ItemPicker.tsx
+  s_6fed4ffbcc9754::t_987e2558fe7219 1-115
+src/finder/ui/ResultPanel.tsx
+  s_6fed4ffbcc9754::t_5bb9106423a4c7 1-65
+src/finder/ui/SearchControls.tsx
+  s_6fed4ffbcc9754::t_c3a7e159ec88f6 1-67
+src/finder/ui/SlotCard.tsx
+  s_6fed4ffbcc9754::t_afdeb0f60b0852 1-90
+src/finder/ui/finder.css
+  s_6fed4ffbcc9754::t_428359335f256e 1-345
+src/finder/ui/useSearch.ts
+  s_6fed4ffbcc9754::t_8380c0f8c0f525 1-70
+src/finder/url.ts
+  s_6fed4ffbcc9754::t_d1f18dfdd34f56 1-80
+src/finder/verify.ts
+  s_6fed4ffbcc9754::t_ddfaaf3890ddad 1-10
+src/styles.css
+  s_6fed4ffbcc9754::t_e7e02f9dada214 709-735
+src/ui/CopyLinkButton.tsx
+  s_6fed4ffbcc9754::t_8e4d37a273185c 1-24
+src/ui/NavLinks.tsx
+  s_6fed4ffbcc9754::t_961ab46e28d98a 1-19
+src/ui/SettingsBar.tsx
+  s_6fed4ffbcc9754::t_75333eef99f629 4-5,15,66-67
+src/ui/SettingsFields.tsx
+  s_6fed4ffbcc9754::t_dd9666d82f1aed 1-72
+tests/finder/fastPath.test.ts
+  s_6fed4ffbcc9754::t_c0459c97e99279 1-55
+tests/finder/match.test.ts
+  s_6fed4ffbcc9754::t_8733b77a2d7c34 1-108
+tests/finder/plan.test.ts
+  s_6fed4ffbcc9754::t_4ee490cea9f189 1-53
+tests/finder/queries.ts
+  s_6fed4ffbcc9754::t_1e17a18a4793ae 1-63
+tests/finder/registry.test.ts
+  s_6fed4ffbcc9754::t_f3420b93d0303c 1-59
+tests/finder/searchController.test.ts
+  s_6fed4ffbcc9754::t_cb55cc46f30ed8 1-218
+tests/finder/searchLoop.test.ts
+  s_6fed4ffbcc9754::t_f23395f5fd0105 1-128
+tests/finder/url.test.ts
+  s_6fed4ffbcc9754::t_ca9133c91744fe 1-78
+tests/helpers/random.ts
+  s_6fed4ffbcc9754::t_1c74e758fc9ca2 1-10
+tsconfig.json
+  s_6fed4ffbcc9754::t_e73e9d74b8fa15 20
+vite.config.ts
+  s_6fed4ffbcc9754::t_1bfb0bb5d5db02 5-6,12,21-22,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "736dcda0000cb5f3f87e47fa5c5496d1f9b7e4d0",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

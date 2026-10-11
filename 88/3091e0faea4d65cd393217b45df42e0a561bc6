@@ -1,0 +1,32 @@
+src/styles.css
+  s_6fed4ffbcc9754::t_d192cd83a21984 237,242,247,263,268,687-692
+  s_6fed4ffbcc9754::t_a77c03cf0763d4 234-236
+  s_6fed4ffbcc9754::t_4d95ea76f464e0 238-241
+  s_6fed4ffbcc9754::t_b5b13d659ed6b0 243-246
+  s_6fed4ffbcc9754::t_460c3d972258a0 248-250,260-262
+  s_6fed4ffbcc9754::t_760948f1b089eb 264-267
+  s_6fed4ffbcc9754::t_a45fc2cdfafbc2 269
+  s_6fed4ffbcc9754::t_001362feed2390 685-686
+  s_6fed4ffbcc9754::t_49ec82cf8cb5d7 693
+  s_6fed4ffbcc9754::t_4f412c1020af37 233,251-259,379
+src/ui/SearchField.tsx
+  s_6fed4ffbcc9754::t_47c7f019d5f0f5 1-40
+src/app.tsx
+  s_6fed4ffbcc9754::t_3ac75c7c862f94 1,10,22,25,44,51,93-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "883091e0faea4d65cd393217b45df42e0a561bc6",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

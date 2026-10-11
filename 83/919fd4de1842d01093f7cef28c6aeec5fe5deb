@@ -1,0 +1,56 @@
+tests/finder/url.test.ts
+  s_6fed4ffbcc9754::t_6afad07d031a1d 36,38-46,51
+  s_6fed4ffbcc9754::t_1680222ed60b5e 33-35
+  s_6fed4ffbcc9754::t_19ae578c0b6a5e 37
+  s_6fed4ffbcc9754::t_5f8b3a472cfd6c 47-50
+  s_6fed4ffbcc9754::t_f82af31e1019b2 52
+  s_6fed4ffbcc9754::t_3103b916c83ccf 4,12-17,28,32,67-69,76,78-79,84-87
+bench/finder.bench.ts
+  s_6fed4ffbcc9754::t_f7359941d2e05b 26-31
+node_modules
+  s_6fed4ffbcc9754::t_76b446c27f51b0 1
+src/finder/check.ts
+  s_6fed4ffbcc9754::t_7c38b0aa3dd650 90
+src/finder/match.ts
+  s_6fed4ffbcc9754::t_9d8c26675d8b84 6,24-25,35-36,57-61
+src/finder/occurrences.ts
+  s_6fed4ffbcc9754::t_7683ef3cbee52b 32,48
+src/finder/plan.ts
+  s_6fed4ffbcc9754::t_81b6a5cf43925c 14-15,56-60,72-73,81-82,90,94,99,102
+src/finder/slotKinds.ts
+  s_6fed4ffbcc9754::t_243a87a4543ec3 143-152,172
+src/finder/types.ts
+  s_6fed4ffbcc9754::t_f8639836ed3d76 2,19-23,35-36
+src/finder/ui/ResultPanel.tsx
+  s_6fed4ffbcc9754::t_0396e2fd791ba9 6-7,31,38-39,45,49,54
+src/finder/ui/SlotCard.tsx
+  s_6fed4ffbcc9754::t_1f21771f59cb82 1,20-22,90-105,110-120
+src/finder/url.ts
+  s_6fed4ffbcc9754::t_00b379230c4855 4-6,11-12,26,38-41,57-58,69,82-87
+tests/finder/match.test.ts
+  s_6fed4ffbcc9754::t_4bfd82a24ab646 12,64-90
+tests/finder/plan.test.ts
+  s_6fed4ffbcc9754::t_c3760250682fde 64-79
+tests/finder/queries.ts
+  s_6fed4ffbcc9754::t_ea622401d41dfc 15-21,71-81
+tests/finder/registry.test.ts
+  s_6fed4ffbcc9754::t_041c8550ed438e 4,53-58
+tests/finder/shopCaps.test.ts
+  s_6fed4ffbcc9754::t_f82322c9af39cc 5,38-53,72-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "83919fd4de1842d01093f7cef28c6aeec5fe5deb",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

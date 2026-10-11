@@ -1,0 +1,23 @@
+src/engine/seed.ts
+  s_6fed4ffbcc9754::t_4b0bc47d68433b 4-13,23-32
+src/ui/SettingsBar.tsx
+  s_6fed4ffbcc9754::t_ed01692b6ae029 1-2,17-24,34-57,66,80-87,92-94,97-98,116-129
+tests/seed.test.ts
+  s_6fed4ffbcc9754::t_cd64665fce992e 2,31-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "081493d6d0d913b74e4683eaa27973655e0e9394",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

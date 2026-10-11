@@ -1,0 +1,23 @@
+src/finder/ui/SlotCard.tsx
+  s_6fed4ffbcc9754::t_21b364ecc7c7b0 2,90-96,98-102,110-113
+src/finder/ui/finder.css
+  s_6fed4ffbcc9754::t_dc6c9594c0470b 53-54
+src/styles.css
+  s_6fed4ffbcc9754::t_9117b64eecf392 66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "422e1c71797d8c3dcdb90ead75fb2fb2f9c3dd23",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

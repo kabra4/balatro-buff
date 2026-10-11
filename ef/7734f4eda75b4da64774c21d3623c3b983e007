@@ -1,0 +1,19 @@
+.gitignore
+  s_6fed4ffbcc9754::t_a938ccc7053d0d 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ef7734f4eda75b4da64774c21d3623c3b983e007",
+  "prompts": {},
+  "sessions": {
+    "s_6fed4ffbcc9754": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d401bb39-caa2-48e4-970a-701cba70ce1a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

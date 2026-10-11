@@ -10,14 +10,6 @@ export interface FilterBarProps {
 export function FilterBar({ filter, onChange, onExpandAll, onCollapseAll }: FilterBarProps) {
   return (
     <div class="filter-bar">
-      <input
-        type="search"
-        class="filter-search"
-        placeholder="Search cards, vouchers, tags, bosses…"
-        aria-label="Search"
-        value={filter.query}
-        onInput={(e) => onChange({ ...filter, query: (e.currentTarget as HTMLInputElement).value })}
-      />
       <div class="chips" role="group" aria-label="Filters">
         {CHIPS.map((chip) => {
           const on = filter.chips.includes(chip.id);

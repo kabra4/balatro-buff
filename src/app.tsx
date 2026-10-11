@@ -1,3 +1,4 @@
+import type { RefObject } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { randomSeed } from './engine/seed';
 import type { AnteResult, Settings } from './engine/types';
@@ -6,6 +7,7 @@ import { AnteSection, countMatches } from './ui/AnteSection';
 import { EMPTY_FILTER, isFilterActive, type Filter } from './ui/filter';
 import { FilterBar } from './ui/FilterBar';
 import { NavLinks } from './ui/NavLinks';
+import { SearchField } from './ui/SearchField';
 import { SettingsBar } from './ui/SettingsBar';
 import { SoulSummary } from './ui/SoulSummary';
 import { useAnalysis } from './ui/useAnalysis';
@@ -17,8 +19,10 @@ export function App() {
   const { analysis, status, error } = useAnalysis(settings);
   const [filter, setFilter] = useState<Filter>(EMPTY_FILTER);
   const [open, setOpen] = useState<Set<number>>(() => new Set(DEFAULT_OPEN_ANTES));
+  const topbar = useRef<HTMLElement>(null);
 
   useUrlSync(settings);
+  useTopbarHeight(topbar);
   useFilterCollapse(analysis?.antes, filter, setOpen);
 
   const patch = (p: Partial<Settings>) => setSettings((s) => ({ ...s, ...p }));
@@ -37,13 +41,14 @@ export function App() {
 
   return (
     <>
-      <header class="topbar">
+      <header class="topbar" ref={topbar}>
         <div class="brand">
           <h1>balatro-buff</h1>
           <span class="tagline">Balatro seed analyzer</span>
           <NavLinks current="analyzer" />
         </div>
         <SettingsBar settings={settings} status={status} onChange={patch} />
+        <SearchField value={filter.query} onChange={(query) => setFilter((f) => ({ ...f, query }))} />
       </header>
       <main class="content">
         {error && <p class="error">Engine error: {error}</p>}
@@ -83,6 +88,18 @@ export function App() {
 function initialSettings(): Settings {
   const s = parse(window.location.search);
   return s.seed ? s : { ...s, seed: randomSeed() };
+}
+
+/** Publishes the sticky header's height as `--topbar-height` so ante jumps land below it. */
+function useTopbarHeight(topbar: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const el = topbar.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => root.style.setProperty('--topbar-height', `${el.offsetHeight}px`));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 }
 
 function useUrlSync(settings: Settings): void {

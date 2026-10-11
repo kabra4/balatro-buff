@@ -230,6 +230,43 @@ summary:focus-visible {
   display: none;
 }
 
+.search-field {
+  position: relative;
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.search-input {
+  width: 100%;
+  padding-right: 32px;
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.search-clear:hover {
+  color: var(--text);
+  background: var(--red);
+}
+
 /* ---------- Content ---------- */
 
 .content {
@@ -307,11 +344,6 @@ summary:focus-visible {
   background: var(--bg);
 }
 
-.filter-search {
-  flex: 1 1 240px;
-  max-width: 420px;
-}
-
 .chips,
 .filter-actions {
   display: flex;
@@ -344,6 +376,7 @@ summary:focus-visible {
   border: 2px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
+  scroll-margin-top: calc(var(--topbar-height, 0px) + 8px);
 }
 
 .ante[open] {
@@ -647,6 +680,15 @@ summary:focus-visible {
   color: var(--muted);
   font-size: 0.8rem;
   padding: 16px;
+}
+
+/* ---------- Mid widths: search drops to its own row instead of squeezing the settings ---------- */
+
+@media (max-width: 1100px) {
+  .search-field {
+    flex-basis: 100%;
+    max-width: none;
+  }
 }
 
 /* ---------- Narrow screens: settings collapse into a drawer ---------- */

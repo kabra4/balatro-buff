@@ -50,7 +50,8 @@
   gap: 8px;
 }
 
-.slot-field select {
+.slot-field select,
+.slot-number {
   flex: 0 1 60%;
 }
 

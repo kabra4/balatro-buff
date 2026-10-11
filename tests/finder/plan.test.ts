@@ -61,6 +61,22 @@ describe('buildPlan', () => {
     expect([...ghost.shopTypes.keys()]).toEqual(['Spectral']);
   });
 
+  it('shop depth: the deepest shop slot among shop-served slots still due, per ante', () => {
+    const limited = buildPlan(query({}, [slot('joker', 'Blueprint', 2, { where: 'shop', shopSlot: 5 }), slot('joker', null, 3, { shopSlot: 2 })]));
+    expect(limited.shopDepth.slice(1)).toEqual([5, 5, 2]);
+    const oneUnlimited = buildPlan(query({}, [slot('joker', null, 2, { shopSlot: 3 }), slot('joker', 'Joker', 2, { where: 'shop' })]));
+    expect(oneUnlimited.shopDepth.slice(1)).toEqual([Infinity, Infinity]);
+    // The unlimited slot is due by ante 1: later antes only need the limited one.
+    const early = buildPlan(query({}, [slot('joker', null, 1, { where: 'shop' }), slot('joker', null, 4, { where: 'shop', shopSlot: 3 })]));
+    expect(early.shopDepth.slice(1)).toEqual([Infinity, 3, 3, 3]);
+  });
+
+  it('slots the shop cannot serve never add shop depth', () => {
+    const plan = buildPlan(query({}, [slot('joker', null, 2, { where: 'shop', shopSlot: 4 }), slot('joker', null, 2, { where: 'packs' }), slot('joker', 'Perkeo', 2), slot('spectral', null, 2), slot('tag', 'Charm Tag', 3)]));
+    expect(plan.shopDepth.slice(1)).toEqual([4, 4, 0]);
+    expect(plan.through.shop).toBe(2);
+  });
+
   it('each step runs through the latest deadline that needs it', () => {
     const plan = buildPlan(query({}, [slot('voucher', 'Hone', 2), slot('tag', 'Charm Tag', 5), slot('voucher', 'Telescope', 4)]));
     expect(plan.through).toEqual({ voucher: 4, tags: 5, packs: 0, shop: 0 });

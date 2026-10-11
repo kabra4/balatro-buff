@@ -29,7 +29,7 @@ export class OccurrenceCollector {
 
   /** `index` is 0-based in the shop queue. */
   shopItem(ante: number, index: number, item: Item): void {
-    this.item(SHOP_KINDS, item, { ante, where: 'shop', place: `Shop #${index + 1}` });
+    this.item(SHOP_KINDS, item, { ante, where: 'shop', place: `Shop #${index + 1}`, shopIndex: index + 1 });
   }
 
   /** `packIndex` is 0-based within the ante; `type` is the base pack type from `packInfo`. */
@@ -45,7 +45,7 @@ export class OccurrenceCollector {
     }
   }
 
-  private item(kinds: readonly KindSource[], item: Item, at: Pick<Occurrence, 'ante' | 'where' | 'place'>): void {
+  private item(kinds: readonly KindSource[], item: Item, at: Pick<Occurrence, 'ante' | 'where' | 'place' | 'shopIndex'>): void {
     let id = 0;
     for (const [kind, source] of kinds) {
       const facet = source.facet(item);

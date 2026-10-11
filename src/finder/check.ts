@@ -87,7 +87,7 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
 
   const rollShop = ({ inst, occ }: SeedRun, a: number): void => {
     rates ??= shopRates(inst);
-    const count = cardsForAnte(a, query.settings.cardsPerAnte, FINDER_SHOP_CAPS);
+    const count = Math.min(cardsForAnte(a, query.settings.cardsPerAnte, FINDER_SHOP_CAPS), plan.shopDepth[a] ?? Infinity);
     const cdt = `cdt${a}`;
     for (let q = 0; q < count; q++) {
       const type = shopType(inst.random(cdt), rates);

@@ -1,4 +1,4 @@
-import { blankSlot, SLOT_KIND_IDS, SLOT_KINDS, whereEnabled } from '../slotKinds';
+import { blankSlot, SLOT_KIND_IDS, SLOT_KINDS, slotSources, whereEnabled } from '../slotKinds';
 import { MAX_BY_ANTE, type EditionReq, type FinderSettings, type Slot, type SlotKind, type Where } from '../types';
 import { ItemPicker } from './ItemPicker';
 
@@ -16,6 +16,9 @@ export const WHERE_OPTIONS: readonly { value: Where; label: string }[] = [
   { value: 'shop', label: 'Shop' },
   { value: 'packs', label: 'Packs' },
 ];
+
+/** "By shop slot" choices (the Cards/ante setting hides deeper ones). */
+export const SHOP_SLOT_OPTIONS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200];
 
 const ANTES = Array.from({ length: MAX_BY_ANTE }, (_, i) => i + 1);
 
@@ -84,7 +87,34 @@ export function SlotCard({ slot, settings, problem, onChange, onRemove }: SlotCa
           ))}
         </select>
       </label>
+      {slotSources(slot, settings).shop !== null && (
+        <label class="slot-field">
+          <span class="field-label">By shop slot</span>
+          <select
+            value={slot.shopSlot === null ? '' : String(slot.shopSlot)}
+            onChange={(e) => patch({ shopSlot: shopSlotValue((e.currentTarget as HTMLSelectElement).value) })}
+          >
+            <option value="">Any</option>
+            {shopSlotOptions(slot.shopSlot, settings.cardsPerAnte).map((n) => (
+              <option key={n} value={String(n)}>
+                #{n}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {problem && <p class="slot-problem">{problem}</p>}
     </div>
   );
+}
+
+/** Options up to Cards/ante, plus the current value (e.g. from a link) so it never silently vanishes. */
+function shopSlotOptions(current: number | null, cardsPerAnte: number): number[] {
+  const options = SHOP_SLOT_OPTIONS.filter((n) => n <= cardsPerAnte);
+  if (current !== null && !options.includes(current)) options.push(current);
+  return options.sort((a, b) => a - b);
+}
+
+function shopSlotValue(raw: string): number | null {
+  return raw === '' ? null : Number(raw);
 }

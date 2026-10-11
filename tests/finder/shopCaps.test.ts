@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ANALYZER_SHOP_CAPS, analyze, cardsForAnte } from '../../src/engine/analyze';
 import { randomSeed } from '../../src/engine/seed';
 import { createChecker, fullCheck } from '../../src/finder/check';
+import type { Occurrence } from '../../src/finder/match';
 import { FINDER_SHOP_CAPS } from '../../src/finder/query';
 import { loadTestEngine } from '../helpers/engine';
 import { seededRandom } from '../helpers/random';
@@ -34,6 +35,22 @@ describe('shop caps', () => {
     }
   });
 
+  it('a shop slot limit rolls only that many shop cards, and full analysis agrees past it', async () => {
+    const engine = await loadTestEngine();
+    const q = query({ cardsPerAnte: 50 }, [slot('joker', null, 3, { where: 'shop', shopSlot: 4 })]);
+    const unlimited = createChecker(engine, { ...q, slots: [{ ...q.slots[0]!, shopSlot: null }] });
+    const checker = createChecker(engine, q);
+    const random = seededRandom(2024);
+    for (let i = 0; i < 50; i++) {
+      const seed = randomSeed(random);
+      const shop = checker.collect(seed).filter((o) => o.where === 'shop');
+      expect(shop.every((o) => o.shopIndex !== undefined && o.shopIndex <= 4 && o.place === `Shop #${o.shopIndex}`)).toBe(true);
+      const early = unlimited.collect(seed).filter((o) => o.where === 'shop' && (o.shopIndex ?? Infinity) <= 4);
+      expect(shop.map(withoutId)).toEqual(early.map(withoutId));
+      expect(checker.check(seed)).toBe(fullCheck(engine, q, seed).matches !== null);
+    }
+  });
+
   it('a joker seen only past shop card 10 of ante 1 does not satisfy a by-ante-1 slot', async () => {
     const engine = await loadTestEngine();
     const random = seededRandom(77);
@@ -51,6 +68,11 @@ describe('shop caps', () => {
     expect(checked).toBe(5);
   });
 });
+
+/** Ids number every rolled card, so they differ between differently deep rolls. */
+function withoutId({ id: _id, ...rest }: Occurrence): Omit<Occurrence, 'id'> {
+  return rest;
+}
 
 /** "Shop #7" → 7. */
 function shopIndex(place: string): number {

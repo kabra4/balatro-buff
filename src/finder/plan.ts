@@ -11,7 +11,8 @@
  *   types needed. Each type has its own streams (soul_Tarot/Tarotar1, soul_Spectral/Spectralspe,
  *   soul_Planet/Planetpl1, …buf…); in-pack dedupe locks are released at the end of the pack, and
  *   names a pack could release early (showman) are never read by other pools (no RETRY in joker pools).
- * - shop:    "cdt<a>" for every queue slot; only item types a slot can match are rolled further.
+ * - shop:    "cdt<a>" for every queue slot up to the deepest shop slot a slot still due accepts;
+ *   only item types a slot can match are rolled further.
  *   Shop jokers are rolled without stickers (sticker streams come after name/edition and feed
  *   nothing we match on).
  * - boss:    never needed ("boss" stream + boss-name locks only).
@@ -52,6 +53,11 @@ export interface Plan {
   packTypes: ReadonlyMap<PackType, number>;
   /** Shop item types to roll beyond "cdt" → through ante. */
   shopTypes: ReadonlyMap<ShopItemType, number>;
+  /**
+   * Shop cards ante `a` needs at most, at index `a`: the deepest "by shop slot" among the slots
+   * the shop can serve that are still due (Infinity = no limit; Cards/ante caps it further).
+   */
+  shopDepth: readonly number[];
   /** Resolve Souls through this ante; 0 = never. */
   souls: number;
   slots: PlannedSlot[];
@@ -63,6 +69,8 @@ interface SlotNeeds {
   steps: Set<StepId>;
   packTypes: Set<PackType>;
   shopTypes: Set<ShopItemType>;
+  /** Shop cards per ante this slot can use: 0 = none, Infinity = all. */
+  shopDepth: number;
   souls: boolean;
 }
 
@@ -70,6 +78,8 @@ export function buildPlan(query: FinderQuery): Plan {
   const through = Object.fromEntries(STEP_ORDER.map((step) => [step, 0])) as Record<StepId, number>;
   const packTypes = new Map<PackType, number>();
   const shopTypes = new Map<ShopItemType, number>();
+  const horizon = horizonOf(query);
+  const shopDepth = Array.from({ length: horizon + 1 }, () => 0);
   let souls = 0;
   const slots = query.slots.map((slot): PlannedSlot => {
     const needs = slotNeeds(slot, query);
@@ -77,17 +87,19 @@ export function buildPlan(query: FinderQuery): Plan {
     for (const step of needs.steps) through[step] = Math.max(through[step], a);
     for (const type of needs.packTypes) packTypes.set(type, Math.max(packTypes.get(type) ?? 0, a));
     for (const type of needs.shopTypes) shopTypes.set(type, Math.max(shopTypes.get(type) ?? 0, a));
+    for (let ante = 1; ante <= a; ante++) shopDepth[ante] = Math.max(shopDepth[ante] ?? 0, needs.shopDepth);
     if (needs.souls) souls = Math.max(souls, a);
     return { slot, lastStep: Math.max(-1, ...[...needs.steps].map((s) => STEP_ORDER.indexOf(s))) };
   });
-  return { horizon: horizonOf(query), through, packTypes, shopTypes, souls, slots, impossible: slots.some((p) => p.lastStep < 0) };
+  return { horizon, through, packTypes, shopTypes, shopDepth, souls, slots, impossible: slots.some((p) => p.lastStep < 0) };
 }
 
 function slotNeeds(slot: Slot, { settings }: FinderQuery): SlotNeeds {
   const sources = slotSources(slot, settings);
-  const needs: SlotNeeds = { steps: new Set(sources.ante), packTypes: new Set(), shopTypes: new Set(), souls: false };
+  const needs: SlotNeeds = { steps: new Set(sources.ante), packTypes: new Set(), shopTypes: new Set(), shopDepth: 0, souls: false };
   if (sources.shop) {
     needs.steps.add('shop');
+    needs.shopDepth = slot.shopSlot ?? Infinity;
     for (const type of sources.shop.types) needs.shopTypes.add(type);
   }
   for (const [type, source] of sources.packs) {

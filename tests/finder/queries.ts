@@ -12,8 +12,13 @@ export const BASE_SETTINGS: FinderSettings = {
 
 let nextId = 1;
 
-export function slot(kind: SlotKind, item: string | null, byAnte: number, opts: { edition?: EditionReq; where?: Where } = {}): Slot {
-  return { id: `s${nextId++}`, kind, item, byAnte, edition: opts.edition ?? 'any', where: opts.where ?? 'any' };
+export function slot(
+  kind: SlotKind,
+  item: string | null,
+  byAnte: number,
+  opts: { edition?: EditionReq; where?: Where; shopSlot?: number } = {},
+): Slot {
+  return { id: `s${nextId++}`, kind, item, byAnte, edition: opts.edition ?? 'any', where: opts.where ?? 'any', shopSlot: opts.shopSlot ?? null };
 }
 
 export function query(settings: Partial<FinderSettings>, slots: Slot[]): FinderQuery {
@@ -62,6 +67,17 @@ export const QUERIES: Record<string, FinderQuery> = {
   ]),
   'soul edition: Foil soul by 8, Erratic Deck': query({ deck: 'Erratic Deck', cardsPerAnte: 10 }, [
     slot('soul', null, 8, { edition: 'Foil' }),
+  ]),
+  'shop slot: Holographic shop joker by 3 within shop slot 4': query({ cardsPerAnte: 25 }, [
+    slot('joker', null, 3, { edition: 'Holographic', where: 'shop', shopSlot: 4 }),
+  ]),
+  'shop slots mixed: limited anywhere by 5 + unlimited shop by 2': query({ cardsPerAnte: 25 }, [
+    slot('joker', null, 5, { edition: 'Polychrome', shopSlot: 3 }),
+    slot('joker', null, 2, { edition: 'Foil', where: 'shop' }),
+  ]),
+  'shop slot: Ghost Deck shop spectral within 5 + Blueprint within 10': query({ deck: 'Ghost Deck' }, [
+    slot('spectral', null, 2, { where: 'shop', shopSlot: 5 }),
+    slot('joker', 'Blueprint', 4, { shopSlot: 10 }),
   ]),
   'deep shop: Blueprint by 8, 50 cards, Black Stake': query({ stake: 'Black Stake', cardsPerAnte: 50, deck: 'Plasma Deck' }, [
     slot('joker', 'Blueprint', 8),

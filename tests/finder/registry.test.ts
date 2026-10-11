@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { analyze, createAnalysisStepper } from '../../src/engine/analyze';
 import type { EmVector } from '../../src/engine/loader';
-import { blankSlot, SLOT_KIND_IDS, SLOT_KINDS, slotProblem, whereEnabled } from '../../src/finder/slotKinds';
+import { blankSlot, hasShopSlot, SLOT_KIND_IDS, SLOT_KINDS, slotProblem, whereEnabled } from '../../src/finder/slotKinds';
 import { DEFAULT_SETTINGS } from '../../src/state/settings';
 import { loadTestEngine } from '../helpers/engine';
 import { BASE_SETTINGS } from './queries';
@@ -48,6 +48,12 @@ describe('slot-kind registry', () => {
     for (const kind of SLOT_KIND_IDS) {
       for (const item of SLOT_KINDS[kind].itemOptions) expect(SLOT_KINDS[kind].itemLayers(item).length, `${kind} ${item}`).toBeGreaterThan(0);
     }
+  });
+
+  it('shop slot applies to the kinds with a shop source, and starts as any', () => {
+    expect(SLOT_KIND_IDS.filter(hasShopSlot)).toEqual(SLOT_KIND_IDS.filter((kind) => SLOT_KINDS[kind].occurrenceSources.shop));
+    expect(SLOT_KIND_IDS.filter(hasShopSlot).sort()).toEqual(['joker', 'spectral']);
+    for (const kind of SLOT_KIND_IDS) expect(blankSlot('a', kind, 2).shopSlot).toBeNull();
   });
 
   it('validates slots: required items, unknown items, impossible where', () => {

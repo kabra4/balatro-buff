@@ -23,6 +23,12 @@ const QUERIES: Record<string, FinderQuery> = {
   'Negative Blueprint in shop by 3': query({ cardsPerAnte: CARDS }, [
     slot('joker', 'Blueprint', 3, { edition: 'Negative', where: 'shop' }),
   ]),
+  'Negative Blueprint in shop by 2': query({ cardsPerAnte: CARDS }, [
+    slot('joker', 'Blueprint', 2, { edition: 'Negative', where: 'shop' }),
+  ]),
+  'Negative Blueprint in shop by 2, shop slot 5': query({ cardsPerAnte: CARDS }, [
+    slot('joker', 'Blueprint', 2, { edition: 'Negative', where: 'shop', shopSlot: 5 }),
+  ]),
   '3-slot mixed (Telescope by 2, Soul by 4, Polychrome joker by 3)': query({ cardsPerAnte: CARDS }, [
     slot('voucher', 'Telescope', 2),
     slot('soul', null, 4),

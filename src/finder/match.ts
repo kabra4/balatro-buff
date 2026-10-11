@@ -3,7 +3,7 @@
  * matching (Kuhn's augmenting paths), never greedily.
  */
 import type { Edition } from '../engine/types';
-import { SLOT_KINDS } from './slotKinds';
+import { hasShopSlot, SLOT_KINDS } from './slotKinds';
 import type { EditionReq, Slot, SlotKind } from './types';
 
 /**
@@ -21,6 +21,8 @@ export interface Occurrence {
   where: 'shop' | 'packs';
   /** "Shop #7" | "Jumbo Arcana Pack (pack 3)" | "Small blind tag" … */
   place: string;
+  /** Shop items only: 1-based position in the ante's shop (the 7 in "Shop #7"). */
+  shopIndex?: number;
 }
 
 export function slotAccepts(slot: Slot, o: Occurrence): boolean {
@@ -30,7 +32,8 @@ export function slotAccepts(slot: Slot, o: Occurrence): boolean {
     o.ante <= slot.byAnte &&
     (slot.item === null || o.name === slot.item) &&
     (!spec.hasEdition || editionMatches(slot.edition, o.edition)) &&
-    (!spec.hasWhere || slot.where === 'any' || slot.where === o.where)
+    (!spec.hasWhere || slot.where === 'any' || slot.where === o.where) &&
+    withinShopSlot(slot, o)
   );
 }
 
@@ -49,6 +52,11 @@ export function matchSlots(slots: readonly Slot[], occ: readonly Occurrence[]): 
     if (slot && facet) result.set(slot.id, facet);
   }
   return result;
+}
+
+/** Shop items must sit within the slot's first `shopSlot` shop cards; other occurrences are unaffected. */
+function withinShopSlot(slot: Slot, o: Occurrence): boolean {
+  return slot.shopSlot === null || o.shopIndex === undefined || !hasShopSlot(slot.kind) || o.shopIndex <= slot.shopSlot;
 }
 
 function editionMatches(req: EditionReq, edition: Edition): boolean {

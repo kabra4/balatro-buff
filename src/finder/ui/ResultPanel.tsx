@@ -3,8 +3,8 @@ import { Sprite } from '../../ui/Sprite';
 import type { Occurrence } from '../match';
 import { analyzerHref } from '../query';
 import type { VerifiedHit } from '../searchController';
-import { anyLabel, SLOT_KINDS } from '../slotKinds';
-import type { Slot } from '../types';
+import { anyLabel, shopSlotApplies, SLOT_KINDS } from '../slotKinds';
+import type { FinderSettings, Slot } from '../types';
 import { EDITION_OPTIONS, WHERE_OPTIONS } from './SlotCard';
 
 export function ResultPanel({ hit }: { hit: VerifiedHit }) {
@@ -28,29 +28,30 @@ export function ResultPanel({ hit }: { hit: VerifiedHit }) {
       <ul class="result-matches">
         {hit.query.slots.map((slot) => {
           const o = hit.matches.get(slot.id);
-          return o ? <MatchLine key={slot.id} slot={slot} occurrence={o} /> : null;
+          return o ? <MatchLine key={slot.id} slot={slot} settings={hit.query.settings} occurrence={o} /> : null;
         })}
       </ul>
     </section>
   );
 }
 
-/** "Joker: Blueprint · Negative · shop · by ante 3" */
-export function describeSlot(slot: Slot): string {
+/** "Joker: Blueprint · Negative · shop · by ante 3 · by shop slot #5" */
+export function describeSlot(slot: Slot, settings: FinderSettings): string {
   const spec = SLOT_KINDS[slot.kind];
   const parts = [`${spec.label}: ${slot.item ?? anyLabel(slot.kind)}`];
   if (spec.hasEdition && slot.edition !== 'any') parts.push(labelOf(EDITION_OPTIONS, slot.edition));
   if (spec.hasWhere && slot.where !== 'any') parts.push(labelOf(WHERE_OPTIONS, slot.where).toLowerCase());
   parts.push(`by ante ${slot.byAnte}`);
+  if (shopSlotApplies(slot, settings)) parts.push(`by shop slot #${slot.shopSlot}`);
   return parts.join(' · ');
 }
 
-function MatchLine({ slot, occurrence: o }: { slot: Slot; occurrence: Occurrence }) {
+function MatchLine({ slot, settings, occurrence: o }: { slot: Slot; settings: FinderSettings; occurrence: Occurrence }) {
   return (
     <li class="match">
       <Sprite layers={SLOT_KINDS[o.kind].itemLayers(o.name)} edition={o.edition} scale={0.5} label={o.name} />
       <span class="match-text">
-        <span class="match-slot">{describeSlot(slot)}</span>
+        <span class="match-slot">{describeSlot(slot, settings)}</span>
         <span class="match-found">
           matched: {o.name}
           {o.edition && ` (${o.edition})`} · Ante {o.ante} · {o.place}

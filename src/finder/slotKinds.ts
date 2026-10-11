@@ -140,6 +140,16 @@ export function whereEnabled(slot: Slot, where: Where, settings: FinderSettings)
   return hasAnySource(slotSources({ ...slot, where }, settings));
 }
 
+/** Whether a slot of this kind can take a "by shop slot" limit: some shop source can yield it. */
+export function hasShopSlot(kind: SlotKind): boolean {
+  return SLOT_KINDS[kind].occurrenceSources.shop !== undefined;
+}
+
+/** Whether the slot's "by shop slot" limit is in effect: the shop can yield it under these settings. */
+export function shopSlotApplies(slot: Slot, settings: FinderSettings): boolean {
+  return slot.shopSlot !== null && slotSources(slot, settings).shop !== null;
+}
+
 export function anyLabel(kind: SlotKind): string {
   const spec = SLOT_KINDS[kind];
   return spec.anyLabel ?? `Any ${spec.label.toLowerCase()}`;
@@ -159,7 +169,7 @@ export function slotProblem(slot: Slot, settings: FinderSettings): string | null
 
 /** Blank slot of `kind` (keeps the deadline). */
 export function blankSlot(id: string, kind: SlotKind, byAnte: number): Slot {
-  return { id, kind, item: null, edition: 'any', where: 'any', byAnte };
+  return { id, kind, item: null, edition: 'any', where: 'any', byAnte, shopSlot: null };
 }
 
 function hasAnySource(sources: SlotSources): boolean {

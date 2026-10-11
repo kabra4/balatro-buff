@@ -9,7 +9,7 @@ function occ(o: Partial<Occurrence> & Pick<Occurrence, 'kind' | 'name'>): Occurr
 }
 
 function slot(s: Partial<Slot> & Pick<Slot, 'kind'>): Slot {
-  return { id: `s${nextId++}`, item: null, edition: 'any', where: 'any', byAnte: 8, ...s };
+  return { id: `s${nextId++}`, item: null, edition: 'any', where: 'any', byAnte: 8, shopSlot: null, ...s };
 }
 
 /** The three facets of one Soul card (shared id). */
@@ -59,6 +59,33 @@ describe('slotAccepts', () => {
     expect(slotAccepts(slot({ kind: 'spectral', where: 'any' }), inPack)).toBe(true);
     const tag = occ({ kind: 'tag', name: 'Charm Tag', where: 'shop' });
     expect(slotAccepts(slot({ kind: 'tag', item: 'Charm Tag', where: 'packs' }), tag)).toBe(true);
+  });
+
+  it('limits shop occurrences to the first `shopSlot` shop cards', () => {
+    const s = slot({ kind: 'joker', item: 'Blueprint', shopSlot: 5 });
+    expect(slotAccepts(s, occ({ kind: 'joker', name: 'Blueprint', place: 'Shop #5', shopIndex: 5 }))).toBe(true);
+    expect(slotAccepts(s, occ({ kind: 'joker', name: 'Blueprint', place: 'Shop #6', shopIndex: 6 }))).toBe(false);
+    expect(slotAccepts({ ...s, shopSlot: null }, occ({ kind: 'joker', name: 'Blueprint', place: 'Shop #6', shopIndex: 6 }))).toBe(true);
+    const ghostShop = occ({ kind: 'spectral', name: 'Grim', place: 'Shop #3', shopIndex: 3 });
+    expect(slotAccepts(slot({ kind: 'spectral', where: 'shop', shopSlot: 2 }), ghostShop)).toBe(false);
+    expect(slotAccepts(slot({ kind: 'spectral', where: 'shop', shopSlot: 3 }), ghostShop)).toBe(true);
+  });
+
+  it('shop slot never limits pack occurrences (where any = in a pack, or early in the shop)', () => {
+    const inPack = { where: 'packs' as const, place: 'Buffoon Pack (pack 4)' };
+    const s = slot({ kind: 'joker', item: 'Blueprint', shopSlot: 1 });
+    expect(slotAccepts(s, occ({ kind: 'joker', name: 'Blueprint', ...inPack }))).toBe(true);
+    expect(slotAccepts({ ...s, where: 'packs' }, occ({ kind: 'joker', name: 'Blueprint', ...inPack }))).toBe(true);
+    const [soul] = soulCard('Perkeo', 2);
+    expect(slotAccepts(slot({ kind: 'soul', shopSlot: 1 }), soul!)).toBe(true);
+  });
+
+  it('kinds without a shop source ignore shop slot', () => {
+    const voucher = occ({ kind: 'voucher', name: 'Telescope', place: 'Voucher' });
+    expect(slotAccepts(slot({ kind: 'voucher', item: 'Telescope', shopSlot: 1 }), voucher)).toBe(true);
+    // Even an occurrence carrying a shop index can't be limited for a kind the shop never yields.
+    const tag = occ({ kind: 'tag', name: 'Charm Tag', shopIndex: 9 });
+    expect(slotAccepts(slot({ kind: 'tag', item: 'Charm Tag', shopSlot: 1 }), tag)).toBe(true);
   });
 
   it('ignores edition for kinds without it', () => {

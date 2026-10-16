@@ -1,0 +1,68 @@
+src/finder/plan.ts
+  s_f958c5ad307e88::t_d1ca18719cff98 3-6,8-19,22-26,30,33-34,36,39,42,44-54,64-65,119,127,141-158
+  s_f958c5ad307e88::t_e5979b744ab438 159
+src/finder/check.ts
+  s_f958c5ad307e88::t_92a05c2137cf78 5-10,12,16-18,21,39-44,48,59-64,66,68,72-77,80-83,97-98,101-102,104-108,111-119,122-123,125-129,131,136-167,169,183-185,188-189,217-243,258-278,281
+src/finder/slotKinds.ts
+  s_f958c5ad307e88::t_fe874de448b45a 102-103
+src/finder/ui/ResultPanel.tsx
+  s_f958c5ad307e88::t_2c476dc1bb46bd 24
+tests/runChoices.test.ts
+  s_f958c5ad307e88::t_dea524351eba5f 54-65,129-131
+src/finder/verify.ts
+  s_f958c5ad307e88::t_2c476dc1bb46bd 1-3,5,7,10-17,19-20,24-27,29-38
+  s_f958c5ad307e88::t_48c2f24e086b91 9,21-23,28
+src/app.tsx
+  s_f958c5ad307e88::t_dea524351eba5f 70,100-101
+README.md
+  s_f958c5ad307e88::t_ec4feabcc8c8ba 80-85
+src/finder/ui/SearchControls.tsx
+  s_f958c5ad307e88::t_dea524351eba5f 41
+tests/finder/verify.test.ts
+  s_f958c5ad307e88::t_6561d31768dc37 1-48
+src/engine/constants.ts
+  s_f958c5ad307e88::t_dea524351eba5f 136-149
+src/finder/sources.ts
+  s_f958c5ad307e88::t_d1ca18719cff98 15,19-20,32-36,49-50
+src/engine/souls.ts
+  s_f958c5ad307e88::t_59a804d072dcfd 17,30-31,59,70,76-77,79,88-116
+src/finder/searchController.ts
+  s_f958c5ad307e88::t_a4867fb865ea83 43
+src/finder/match.ts
+  s_f958c5ad307e88::t_fe874de448b45a 5,22,26-30
+src/finder/query.ts
+  s_f958c5ad307e88::t_2c476dc1bb46bd 1,4,15,17,20-30
+tests/finder/url.test.ts
+  s_f958c5ad307e88::t_89136835337d27 97,107-121
+  s_f958c5ad307e88::t_a4b4fbcc653f3a 3
+  s_f958c5ad307e88::t_717413ce4d6634 122
+tests/finder/queries.ts
+  s_f958c5ad307e88::t_a9fb6dc21ce2cb 82-98
+src/finder/occurrences.ts
+  s_f958c5ad307e88::t_fe874de448b45a 5,36-37,39,49,60-63,67,71-72,74-76
+tests/finder/shopCaps.test.ts
+  s_f958c5ad307e88::t_23c92f5493852b 32-33,47,49
+src/engine/run.ts
+  s_f958c5ad307e88::t_dea524351eba5f 65-68,70
+src/state/url.ts
+  s_f958c5ad307e88::t_dea524351eba5f 43
+tests/finder/plan.test.ts
+  s_f958c5ad307e88::t_ad38494b4b1148 2,8,13,15,22,49-50,52,83,86-99,101,103,105-106,110-121
+  s_f958c5ad307e88::t_e6a203c3bcf9d0 100,102,104,107-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7792828899e83cc2c805c67566eb36a47e69b556",
+  "prompts": {},
+  "sessions": {
+    "s_f958c5ad307e88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3414c374-d265-4279-8313-1023009d0273",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Akbar <akbar@datatruck.io>"
+    }
+  }
+}

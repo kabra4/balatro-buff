@@ -82,6 +82,9 @@ export interface EngineInstance extends EmHandle {
   setDeck(deck: string): void;
   nextBoss(ante: number): string;
   nextVoucher(ante: number): string;
+  /** Puts a bought voucher in effect: locks it, unlocks its upgrade (unconditionally). Consumes no RNG. */
+  activateVoucher(name: string): void;
+  isVoucherActive(name: string): boolean;
   nextTag(ante: number): string;
   nextShopItem(ante: number): ShopItemHandle;
   nextPack(ante: number): string;

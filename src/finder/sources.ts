@@ -9,19 +9,18 @@
  * another source's picks. If that test ever fails, the sources sharing names are no longer
  * independent and plan.ts must roll them together.
  */
-import { createVoucherRoller } from '../engine/analyze';
 import { toEdition } from '../engine/editions';
 import { withHandle } from '../engine/instance';
 import type { EngineInstance, ImmolateModule } from '../engine/loader';
-import type { AnteResult, Item } from '../engine/types';
-import type { FinderSettings } from './types';
+import { createVoucherState, voucherUpgrades } from '../engine/run';
+import type { AnteResult, Item, Settings } from '../engine/types';
 
 /** Base pack types as returned by the engine's `packInfo`. */
 export type PackType = 'Arcana Pack' | 'Celestial Pack' | 'Spectral Pack' | 'Buffoon Pack' | 'Standard Pack';
 /** Shop queue item types as rolled by the engine's `nextShopItem`. */
 export type ShopItemType = 'Joker' | 'Tarot' | 'Planet' | 'Spectral';
 
-/** Rolls one ante's values on the fast path. Per-run state lives in the Instance, not the closure. */
+/** Rolls one ante's values on the fast path. */
 export type AnteRoller = (inst: EngineInstance, ante: number) => string[];
 
 export interface AnteSourceSpec {
@@ -29,8 +28,8 @@ export interface AnteSourceSpec {
   places: readonly string[];
   /** The same values from a full analysis. */
   fromAnte: (ante: AnteResult) => readonly string[];
-  /** Fast-path roller, created once per query and called per seed in ante order 1, 2, … */
-  createRoller: (engine: ImmolateModule, settings: FinderSettings) => AnteRoller;
+  /** Fast-path roller, created per seed (it may hold per-run state) and called in ante order 1, 2, … */
+  createRoller: (engine: ImmolateModule, settings: Settings) => AnteRoller;
 }
 
 /** Fast-path roll of one shop item of a type, after its "cdt" type roll (same streams as nextShopItem). */
@@ -44,8 +43,8 @@ export const ANTE_SOURCES = {
     places: ['Voucher'],
     fromAnte: (a) => [a.voucher],
     createRoller: (engine, settings) => {
-      const roll = createVoucherRoller(engine, settings.locked);
-      return (inst, ante) => [roll(inst, ante)];
+      const vouchers = createVoucherState(voucherUpgrades(engine), settings);
+      return (inst, ante) => [vouchers.roll(inst, ante, true)];
     },
   },
   tags: {

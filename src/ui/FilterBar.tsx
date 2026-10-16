@@ -5,9 +5,12 @@ export interface FilterBarProps {
   onChange: (filter: Filter) => void;
   onExpandAll: () => void;
   onCollapseAll: () => void;
+  /** Number of run choices made; the reset button shows when there are any. */
+  actionCount: number;
+  onResetActions: () => void;
 }
 
-export function FilterBar({ filter, onChange, onExpandAll, onCollapseAll }: FilterBarProps) {
+export function FilterBar({ filter, onChange, onExpandAll, onCollapseAll, actionCount, onResetActions }: FilterBarProps) {
   return (
     <div class="filter-bar">
       <div class="chips" role="group" aria-label="Filters">
@@ -33,6 +36,11 @@ export function FilterBar({ filter, onChange, onExpandAll, onCollapseAll }: Filt
         <button type="button" class="btn-small" onClick={onCollapseAll}>
           Collapse all
         </button>
+        {actionCount > 0 && (
+          <button type="button" class="btn-small" onClick={onResetActions}>
+            Reset run choices ({actionCount})
+          </button>
+        )}
       </div>
     </div>
   );

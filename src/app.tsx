@@ -1,7 +1,8 @@
 import type { RefObject } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { randomSeed } from './engine/seed';
-import type { AnteResult, Settings } from './engine/types';
+import type { AnteResult, RunAction, Settings } from './engine/types';
+import { toggleAction } from './state/actions';
 import { parse, serialize } from './state/url';
 import { AnteSection, countMatches } from './ui/AnteSection';
 import { EMPTY_FILTER, isFilterActive, type Filter } from './ui/filter';
@@ -14,6 +15,9 @@ import { useAnalysis } from './ui/useAnalysis';
 
 const DEFAULT_OPEN_ANTES = [1, 2];
 
+/** Run choices are seed-specific: changing any of these clears them (antes / cards keep them). */
+const RUN_DEFINING: readonly (keyof Settings)[] = ['seed', 'deck', 'stake', 'version', 'showman', 'locked'];
+
 export function App() {
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const { analysis, status, error } = useAnalysis(settings);
@@ -25,7 +29,9 @@ export function App() {
   useTopbarHeight(topbar);
   useFilterCollapse(analysis?.antes, filter, setOpen);
 
-  const patch = (p: Partial<Settings>) => setSettings((s) => ({ ...s, ...p }));
+  const patch = (p: Partial<Settings>) => setSettings((s) => ({ ...s, ...p, ...(redefinesRun(s, p) ? { actions: [] } : {}) }));
+  const toggleRunAction = (action: RunAction) => setSettings((s) => ({ ...s, actions: toggleAction(s.actions ?? [], action) }));
+  const actions = settings.actions ?? [];
   const setAnteOpen = (ante: number, isOpen: boolean) =>
     setOpen((prev) => {
       if (prev.has(ante) === isOpen) return prev;
@@ -61,6 +67,8 @@ export function App() {
               onChange={setFilter}
               onExpandAll={() => setOpen(new Set(analysis.antes.map((a) => a.ante)))}
               onCollapseAll={() => setOpen(new Set())}
+              actionCount={actions.length}
+              onResetActions={() => patch({ actions: [] })}
             />
             <div class="antes">
               {analysis.antes.map((ante) => (
@@ -70,6 +78,8 @@ export function App() {
                   filter={filter}
                   open={open.has(ante.ante)}
                   onToggle={(isOpen) => setAnteOpen(ante.ante, isOpen)}
+                  actions={actions}
+                  onToggleAction={toggleRunAction}
                 />
               ))}
             </div>
@@ -88,6 +98,10 @@ export function App() {
 function initialSettings(): Settings {
   const s = parse(window.location.search);
   return s.seed ? s : { ...s, seed: randomSeed() };
+}
+
+function redefinesRun(s: Settings, p: Partial<Settings>): boolean {
+  return RUN_DEFINING.some((key) => key in p && JSON.stringify(p[key]) !== JSON.stringify(s[key]));
 }
 
 /** Publishes the sticky header's height as `--topbar-height` so ante jumps land below it. */

@@ -100,6 +100,7 @@ describe('finder URL state', () => {
       seed: 'ABCD1234',
       maxAnte: 8,
       locked: UNLOCK_OPTIONS.filter((o) => FULL.settings.locked.includes(o)),
+      actions: [],
     });
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Resolves which Legendary joker each "The Soul" card yields.
  *
- * Walks Souls in order of appearance (ante asc; shop then packs, queue order) and calls
+ * Walks Souls in order of appearance (ante asc; shop then packs, open order) and calls
  * `nextJoker('sou', ante, false)` for each. Unless Showman is on, the received legendary is
  * locked — the player owns it, so the game excludes it from the pool for the next Soul.
  * Once all legendaries are owned the pool is empty and Balatro falls back to plain "Joker"
@@ -10,11 +10,11 @@
  * Runs on a separate Instance with the same setup: only the `Joker4*` / `edisou<ante>` streams
  * are consumed, which the main pass never touches, so main-pass output is unaffected either way.
  */
-import { EMPTY_POOL_JOKER, LEGENDARY_JOKERS, SOUL_CARD } from './constants';
+import { BLIND_NAMES, EMPTY_POOL_JOKER, LEGENDARY_JOKERS, SOUL_CARD } from './constants';
 import { toEdition } from './editions';
 import { createInstance, withHandle } from './instance';
 import type { EngineInstance, ImmolateModule } from './loader';
-import type { AnteResult, ConsumableKind, Item, Settings, SoulLocation, SoulResult } from './types';
+import type { AnteResult, ConsumableKind, Item, Pack, Settings, SoulLocation, SoulResult } from './types';
 
 type ConsumableItem = Extract<Item, { kind: ConsumableKind }>;
 
@@ -94,9 +94,15 @@ function findSoulSites(antes: AnteResult[]): SoulSite[] {
     });
     packs.forEach((pack, p) => {
       for (const item of pack.items) {
-        if (isSoulCard(item)) sites.push({ ante, item, where: `${pack.name} (pack ${p + 1})` });
+        if (isSoulCard(item)) sites.push({ ante, item, where: packPlace(pack, p) });
       }
     });
   }
   return sites;
+}
+
+/** Where a Soul in `pack` came from: "Jumbo Arcana Pack (pack 3)" (shop queue) or "Charm Tag (skip Small Blind)". */
+function packPlace(pack: Pack, fallbackIndex: number): string {
+  if (pack.tag) return `${pack.tag.name} (skip ${BLIND_NAMES[pack.tag.blind]})`;
+  return `${pack.name} (pack ${(pack.queueIndex ?? fallbackIndex) + 1})`;
 }

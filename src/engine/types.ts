@@ -36,6 +36,15 @@ export type ItemKind = Item['kind'];
 /** The Item variant(s) with the given kind. */
 export type ItemOf<K extends ItemKind> = Item & { kind: K };
 
+export type Blind = 'small' | 'big';
+
+/** A choice the player made that changes later rolls. No actions = buy every voucher, skip nothing, open every pack. */
+export type RunAction =
+  | { kind: 'skipVoucher'; ante: number }
+  | { kind: 'skipBlind'; ante: number; blind: Blind }
+  /** `index`: 0-based in the ante's shop pack queue. */
+  | { kind: 'skipPack'; ante: number; index: number };
+
 export interface Pack {
   /** Full pack name as rolled, e.g. "Jumbo Arcana Pack". */
   name: string;
@@ -44,6 +53,19 @@ export interface Pack {
   size: number;
   choices: number;
   items: Item[];
+  /** From a skipped blind's tag. */
+  tag?: { name: string; blind: Blind };
+  /** Shop queue index (shop packs only). */
+  queueIndex?: number;
+  /** Shop pack the player didn't open: `items` = []. */
+  unopened?: boolean;
+}
+
+/** A pack tag whose blind wasn't skipped: the pack it would give if it were (only that change). */
+export interface TagPreview {
+  blind: Blind;
+  tag: string;
+  pack: Pack;
 }
 
 export interface AnteResult {
@@ -52,7 +74,11 @@ export interface AnteResult {
   voucher: string;
   tags: [string, string];
   shop: Item[];
+  /** In open order: shop packs and the packs of skipped blinds' tags. */
   packs: Pack[];
+  tagPreviews?: TagPreview[];
+  voucherSkipped?: boolean;
+  skipped?: Blind[];
 }
 
 /** Max shop cards per ante (ante → cap); antes not listed use the Cards/ante setting as is. */
@@ -70,6 +96,10 @@ export interface Settings {
   locked: string[];
   /** Per-ante shop card caps; defaults to the analyzer's (TheSoul) caps. Not stored in the URL. */
   shopCaps?: ShopCaps;
+  /** The player's run choices (seed-specific). */
+  actions?: readonly RunAction[];
+  /** TheSoul parity: bought vouchers have no effect. Not stored in the URL. */
+  theSoulCompat?: boolean;
 }
 
 export interface SoulLocation extends SoulResult {

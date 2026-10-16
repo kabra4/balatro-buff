@@ -3,9 +3,10 @@
  * (see plan.ts), ante by ante, and rejects as soon as a deadline can no longer be met.
  * `fullCheck` is the reference: full `analyze()` + `matchSlots` — used to verify every hit.
  */
-import { analyze, cardsForAnte, packsForAnte, readPackItems } from '../engine/analyze';
+import { analyze, cardsForAnte, readPackItems } from '../engine/analyze';
 import { createInstance, withHandle } from '../engine/instance';
 import type { EngineInstance, ImmolateModule } from '../engine/loader';
+import { packsForAnte } from '../engine/run';
 import { createSoulRoller, isSoulCard, type SoulRoller } from '../engine/souls';
 import type { Analysis } from '../engine/types';
 import { matchSlots, type Occurrence } from './match';
@@ -43,6 +44,7 @@ interface ShopRates {
 
 interface SeedRun {
   inst: EngineInstance;
+  anteRollers: Map<AnteSource, AnteRoller>;
   souls: SoulRoller | null;
   occ: OccurrenceCollector;
 }
@@ -59,16 +61,14 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
   }
   const allSlots = query.slots;
   const dueAfter = dueSlots(plan);
-  const anteRollers = new Map<AnteSource, AnteRoller>(
-    ANTE_SOURCE_IDS.filter((id) => plan.through[id] > 0).map((id) => [id, ANTE_SOURCES[id].createRoller(engine, query.settings)]),
-  );
+  const rolledSources = ANTE_SOURCE_IDS.filter((id) => plan.through[id] > 0);
   const packInfos = new Map<string, PackInfo>();
   let rates: ShopRates | null = null;
 
   const rollStep = (step: StepId, run: SeedRun, a: number): void => {
     if (step === 'packs') rollPacks(run, a);
     else if (step === 'shop') rollShop(run, a);
-    else run.occ.anteValues(a, step, anteRollers.get(step)?.(run.inst, a) ?? []);
+    else run.occ.anteValues(a, step, run.anteRollers.get(step)?.(run.inst, a) ?? []);
   };
 
   const rollPacks = ({ inst, souls, occ }: SeedRun, a: number): void => {
@@ -103,7 +103,8 @@ export function createChecker(engine: ImmolateModule, query: FinderQuery): Check
     let souls: SoulRoller | null = null;
     try {
       souls = plan.souls > 0 ? createSoulRoller(engine, settings) : null;
-      const seedRun: SeedRun = { inst, souls, occ: new OccurrenceCollector() };
+      const anteRollers = new Map(rolledSources.map((id) => [id, ANTE_SOURCES[id].createRoller(engine, settings)]));
+      const seedRun: SeedRun = { inst, anteRollers, souls, occ: new OccurrenceCollector() };
       const due: Slot[] = [];
       for (let a = 1; a <= plan.horizon; a++) {
         for (let k = 0; k < STEP_ORDER.length; k++) {

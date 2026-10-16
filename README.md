@@ -4,7 +4,8 @@ A Balatro seed analyzer — my own take on [SpectralPack/TheSoul](https://github
 Live at **https://kabra4.github.io/balatro-buff/**.
 
 For any seed it shows, ante by ante: boss blind, voucher, both skip tags, the shop queue and every
-booster pack's contents — with the exact same RNG output as TheSoul for the same settings.
+booster pack's contents — built on TheSoul's engine, and following your run: vouchers you buy take
+effect, and you can skip vouchers, blinds and packs (see [Run choices](#run-choices)).
 
 What it adds on top:
 
@@ -28,7 +29,33 @@ Open the page, type a seed (or hit 🎲), pick deck / stake / game version. Resu
   legendaries you already received.
 - **Unlocks…** — uncheck items your profile hasn't unlocked yet; they're excluded from the pools.
 - URL params: `seed`, `deck`, `stake`, `version` (10106 = 1.0.1f, 10103 = 1.0.1c, 10014 = 1.0.0n),
-  `ante`, `cards`, `showman=1`, `locked=Name,Name,…`.
+  `ante`, `cards`, `showman=1`, `locked=Name,Name,…`, `act=…` (run choices, below).
+
+### Run choices
+
+By default the analyzer assumes you buy every voucher, play every blind and open every pack. Each
+ante's **Your run** row changes that: untick **Bought** on the voucher, **Skip** a blind (taking its
+tag), or untick **Opened** on a shop pack. Later rolls follow:
+
+- **Bought vouchers take effect** — Tarot/Planet Merchant and Tycoon, Magic Trick, Hone, Glow Up
+  change the shop; Omen Globe puts Spectral cards into Arcana packs; Hone / Glow Up change Buffoon
+  packs; Overstock adds a shop card. A voucher is bought at the first shop of its ante, after the
+  cards the shop shows on entry. A voucher you skip can show up again in a later ante.
+- **Skipping a blind** opens its tag's pack right away (Charm, Ethereal, Meteor, Buffoon, Standard
+  Tag), shown in the ante as e.g. "Charm Tag → Mega Arcana Pack", and costs that blind's shop visit
+  (2 fewer shop packs). Packs of the same type share a stream, so the shop's later packs change.
+  Tags marked ⚠ (Rare, Uncommon, Voucher, Double, Boss, Top-up, Orbital) have effects that aren't
+  simulated yet.
+- **"If you skip a blind"** previews (dashed) show the pack a pack tag would give — exactly what
+  skipping only that blind would show, Souls included ("if taken").
+- **Unopened packs** roll nothing; the next pack of the same type gets their cards.
+
+Choices are seed-specific: changing seed, deck, stake, version, Showman or Unlocks clears them
+(**Reset run choices** does too). In the URL they're `act=v1,s2,b2,p2.5` — ante-1 voucher skipped,
+ante-2 small and big blinds skipped, ante-2 shop pack 5 not opened.
+
+Output identical to TheSoul is a compatibility mode (no voucher effects, no run choices) used by
+the parity tests; with no choices, the analyzer differs from TheSoul from the first effect voucher on.
 
 ### How Soul resolution works
 
@@ -49,6 +76,9 @@ ante 1 and 30 of ante 2 count, since there's little money to reroll that early.
 Every match is re-checked with a full analysis before it is shown, and
 **Open in analyzer** opens it on the analyzer page. The query lives in the URL (`q=` plus the
 analyzer's settings params), so searches are shareable.
+
+The finder doesn't model run choices yet: it searches as TheSoul does (no skips, voucher effects
+off), so a found seed can look different in the analyzer once an effect voucher is bought.
 
 Speed comes from only rolling the engine streams a query needs (e.g. a tag-only query never rolls a
 shop) and rejecting a seed as soon as a deadline can't be met — see `src/finder/plan.ts` for which
@@ -72,13 +102,15 @@ npm run bench      # finder throughput: fast path vs full analysis (seeds/s per 
 Layout:
 
 - `public/engine/` — TheSoul's prebuilt `immolate.js` + `immolate.wasm`, unchanged.
-- `src/engine/` — engine loader, Web Worker, the analysis port (`analyze.ts`), Soul resolution
-  (`souls.ts`), and the TheSoul text formatter used for parity tests.
-- `src/state/` — default settings and URL (de)serialisation.
+- `src/engine/` — engine loader, Web Worker, the analysis port (`analyze.ts`), run choices and
+  voucher state (`run.ts`), Soul resolution (`souls.ts`), and the TheSoul text formatter used for
+  parity tests.
+- `src/state/` — default settings, run-choice tokens (`actions.ts`) and URL (de)serialisation.
 - `src/finder/` — seed finder: slot-kind registry (`slotKinds.ts`), matching (`match.ts`), fast-path
   plan + checker (`plan.ts`, `check.ts`), search worker and controller, URL state, UI (`ui/`).
 - `src/ui/` — Preact components, CSS sprite tables, filter logic.
-- `tests/` — parity against a verbatim port of TheSoul's text loop, Soul resolution, URL, filter, seed;
+- `tests/` — parity against a verbatim port of TheSoul's text loop (compat mode), run choices and
+  voucher effects, Soul resolution, URL, filter, seed;
   `tests/finder/` — matching, plan, fast path ≡ full analysis, search loop/controller, finder URL.
 - `bench/` — `npm run bench`.
 

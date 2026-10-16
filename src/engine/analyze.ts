@@ -1,14 +1,16 @@
 /**
- * Faithful port of TheSoul's `performAnalysis` loop (index.html). Engine calls happen in
- * exactly the same order as TheSoul's — the RNG streams are order-sensitive.
+ * Port of TheSoul's `performAnalysis` loop (index.html), extended with the player's run choices
+ * (see run.ts). Engine calls within each RNG stream happen in the same order as TheSoul's — the
+ * streams are order-sensitive — so with no actions and `theSoulCompat` the output is TheSoul's.
  */
-import { SOUL_CARD, UNLOCK_OPTIONS } from './constants';
+import { SPECTRAL_CARDS, TAG_PACKS } from './constants';
 import { toEdition } from './editions';
 import { createInstance, withHandle } from './instance';
 import type { CardHandle, EmVector, EngineInstance, ImmolateModule, JokerDataHandle } from './loader';
+import { anteChoices, anteEvents, BLINDS, createVoucherState, SHOP_PACKS_PER_VISIT, shopPackCount, voucherUpgrades, type VoucherState } from './run';
 import { normalizeSeed } from './seed';
 import { resolveSouls } from './souls';
-import type { Analysis, AnteResult, ConsumableKind, Item, Pack, Settings, ShopCaps } from './types';
+import type { Analysis, AnteResult, Blind, ConsumableKind, Item, Pack, RunAction, Settings, ShopCaps, TagPreview } from './types';
 
 type PackReader = (inst: EngineInstance, size: number, ante: number) => Item[];
 
@@ -28,8 +30,8 @@ const SHOP_CONSUMABLE_KINDS: Record<string, ConsumableKind> = {
   Spectral: 'spectral',
 };
 
-/** Cards that are Spectral regardless of which pack they appear in. */
-const ALWAYS_SPECTRAL = new Set([SOUL_CARD, 'Black Hole']);
+/** Spectral cards are Spectral wherever they appear (The Soul / Black Hole in packs, Omen Globe's in Arcana packs). */
+const SPECTRAL_NAMES: ReadonlySet<string> = new Set(SPECTRAL_CARDS);
 
 const RANKS: Record<string, string> = { T: '10', J: 'Jack', Q: 'Queen', K: 'King', A: 'Ace' };
 const SUITS: Record<string, string> = { C: 'Clubs', S: 'Spades', D: 'Diamonds', H: 'Hearts' };
@@ -44,28 +46,16 @@ export interface AnalysisStepper {
   dispose(): void;
 }
 
-/** Rolls the voucher for `ante`, locks it and unlocks its upgrade (when the profile has it). */
-export type VoucherRoller = (inst: EngineInstance, ante: number) => string;
-
 /** Shop cards rolled in `ante`: the Cards/ante setting, capped per ante by `caps`. */
 export function cardsForAnte(ante: number, cardsPerAnte: number, caps: ShopCaps = ANALYZER_SHOP_CAPS): number {
   return Math.min(caps[ante] ?? cardsPerAnte, cardsPerAnte);
 }
 
-export function packsForAnte(ante: number): number {
-  return ante === 1 ? 4 : 6;
-}
-
 export function analyze(engine: ImmolateModule, s: Settings): Analysis {
   const settings: Settings = { ...s, seed: normalizeSeed(s.seed), locked: [...s.locked] };
-  const stepper = createAnalysisStepper(engine, settings);
-  const antes: AnteResult[] = [];
-  try {
-    for (let ante = stepper.next(); ante !== null; ante = stepper.next()) antes.push(ante);
-  } finally {
-    stepper.dispose();
-  }
+  const antes = analyzeAntes(engine, settings);
   const souls = resolveSouls(engine, settings, antes);
+  attachTagPreviews(engine, settings, antes);
   return { settings, antes, souls };
 }
 
@@ -74,13 +64,13 @@ export function createAnalysisStepper(engine: ImmolateModule, s: Settings): Anal
   const settings: Settings = { ...s, seed: normalizeSeed(s.seed) };
   let inst: EngineInstance | null = createInstance(engine, settings);
   try {
-    const rollVoucher = createVoucherRoller(engine, settings.locked);
+    const vouchers = createVoucherState(voucherUpgrades(engine), settings);
     let ante = 0;
     return {
       next: () => {
         if (inst === null || ante >= settings.maxAnte) return null;
         ante++;
-        return analyzeAnte(engine, inst, ante, settings, rollVoucher);
+        return analyzeAnte(engine, inst, ante, settings, vouchers);
       },
       dispose: () => {
         inst?.delete();
@@ -93,59 +83,107 @@ export function createAnalysisStepper(engine: ImmolateModule, s: Settings): Anal
   }
 }
 
-export function createVoucherRoller(engine: ImmolateModule, lockedNames: readonly string[]): VoucherRoller {
-  const upgrades = voucherUpgrades(engine);
-  const locked = new Set(lockedNames);
-  return (inst, ante) => {
-    const voucher = inst.nextVoucher(ante);
-    inst.lock(voucher);
-    const upgrade = upgrades.get(voucher);
-    if (upgrade !== undefined && isUnlockable(upgrade, locked)) inst.unlock(upgrade);
-    return voucher;
-  };
-}
-
 /** Rolls the contents of a pack of base `type` (from `packInfo`). Unknown types yield no cards, like TheSoul. */
 export function readPackItems(inst: EngineInstance, type: string, size: number, ante: number): Item[] {
   const reader = PACK_READERS[type];
   return reader ? reader(inst, size, ante) : [];
 }
 
-function analyzeAnte(
-  engine: ImmolateModule,
-  inst: EngineInstance,
-  a: number,
-  s: Settings,
-  rollVoucher: VoucherRoller,
-): AnteResult {
+function analyzeAntes(engine: ImmolateModule, settings: Settings): AnteResult[] {
+  const stepper = createAnalysisStepper(engine, settings);
+  const antes: AnteResult[] = [];
+  try {
+    for (let ante = stepper.next(); ante !== null; ante = stepper.next()) antes.push(ante);
+  } finally {
+    stepper.dispose();
+  }
+  return antes;
+}
+
+function analyzeAnte(engine: ImmolateModule, inst: EngineInstance, a: number, s: Settings, vouchers: VoucherState): AnteResult {
+  const choices = anteChoices(s.actions, a);
   inst.initUnlocks(a, false);
   const boss = inst.nextBoss(a);
-  const voucher = rollVoucher(inst, a);
-  const tag1 = inst.nextTag(a);
-  const tag2 = inst.nextTag(a);
+  const voucher = vouchers.roll(inst, a, choices.voucherBought);
+  const tags: [string, string] = [inst.nextTag(a), inst.nextTag(a)];
 
-  const shop: Item[] = [];
   const shopSize = cardsForAnte(a, s.cardsPerAnte, s.shopCaps);
-  for (let q = 1; q <= shopSize; q++) shop.push(readShopItem(inst, a));
-
+  const names = drawPackNames(inst, a, shopPackCount(a, choices.skipped));
+  const shop: Item[] = [];
   const packs: Pack[] = [];
-  const packCount = packsForAnte(a);
-  for (let p = 1; p <= packCount; p++) packs.push(readPack(engine, inst, a));
-
-  return { ante: a, boss, voucher, tags: [tag1, tag2], shop, packs };
-}
-
-/** TheSoul only unlocks an upgrade when it is in the Unlocks list and the user has it unlocked. */
-function isUnlockable(name: string, locked: Set<string>): boolean {
-  return (UNLOCK_OPTIONS as readonly string[]).includes(name) && !locked.has(name);
-}
-
-function voucherUpgrades(engine: ImmolateModule): Map<string, string> {
-  const upgrades = new Map<string, string>();
-  for (let i = 0; i + 1 < engine.VOUCHERS.size(); i += 2) {
-    upgrades.set(engine.VOUCHERS.get(i), engine.VOUCHERS.get(i + 1));
+  let visits = 0;
+  let next = 0;
+  for (const event of anteEvents(choices.skipped)) {
+    if (event.kind === 'tagPack') {
+      const pack = openTagPack(engine, inst, a, tags, event.blind);
+      if (pack) packs.push(pack);
+      continue;
+    }
+    if (visits++ === 0) {
+      // The voucher is bought after the cards shown on entry, so they roll with the earlier vouchers only.
+      const entry = Math.min(vouchers.shopSlots(), shopSize);
+      for (let q = 0; q < shopSize; q++) {
+        if (q === entry) vouchers.activatePending(inst);
+        shop.push(readShopItem(inst, a));
+      }
+      vouchers.activatePending(inst);
+    }
+    for (let k = 0; k < SHOP_PACKS_PER_VISIT && next < names.length; k++, next++) {
+      packs.push(openShopPack(engine, inst, a, names[next]!, next, choices.unopened));
+    }
   }
-  return upgrades;
+  return { ante: a, boss, voucher, tags, shop, packs, voucherSkipped: !choices.voucherBought, skipped: [...choices.skipped] };
+}
+
+/**
+ * For each pack tag whose blind isn't skipped: the pack it would give if it were. Each preview is
+ * a variant analysis (antes 1..a, that skip added, no shop cards) with its Souls resolved, so it is
+ * exactly what toggling the skip would show — including Omen Globe's Arcana/Spectral coupling.
+ * No shop cards is safe: shop rolls touch no pack stream and lock nothing, and never yield a Soul.
+ */
+function attachTagPreviews(engine: ImmolateModule, s: Settings, antes: AnteResult[]): void {
+  for (const ante of antes) {
+    const previews: TagPreview[] = [];
+    BLINDS.forEach((blind, i) => {
+      const tag = ante.tags[i]!;
+      if (TAG_PACKS[tag] === undefined || ante.skipped?.includes(blind)) return;
+      const pack = previewTagPack(engine, s, ante.ante, blind);
+      if (pack) previews.push({ blind, tag, pack });
+    });
+    ante.tagPreviews = previews;
+  }
+}
+
+function previewTagPack(engine: ImmolateModule, s: Settings, a: number, blind: Blind): Pack | undefined {
+  const skip: RunAction = { kind: 'skipBlind', ante: a, blind };
+  const variant: Settings = { ...s, maxAnte: a, cardsPerAnte: 0, actions: [...(s.actions ?? []), skip] };
+  const antes = analyzeAntes(engine, variant);
+  resolveSouls(engine, variant, antes);
+  return antes[a - 1]?.packs.find((p) => p.tag?.blind === blind);
+}
+
+/** The ante's shop pack queue (names only; contents are rolled when a pack is opened). */
+function drawPackNames(inst: EngineInstance, a: number, count: number): string[] {
+  return Array.from({ length: count }, () => inst.nextPack(a));
+}
+
+/** The pack a skipped blind's tag gives, or null when the tag gives no pack. */
+function openTagPack(engine: ImmolateModule, inst: EngineInstance, a: number, tags: [string, string], blind: Blind): Pack | null {
+  const tag = tags[BLINDS.indexOf(blind)]!;
+  const name = TAG_PACKS[tag];
+  if (name === undefined) return null;
+  const info = packInfo(engine, name);
+  return { name, ...info, items: readPackItems(inst, info.type, info.size, a), tag: { name: tag, blind } };
+}
+
+function openShopPack(engine: ImmolateModule, inst: EngineInstance, a: number, name: string, index: number, unopened: ReadonlySet<number>): Pack {
+  const info = packInfo(engine, name);
+  if (unopened.has(index)) return { name, ...info, items: [], queueIndex: index, unopened: true };
+  return { name, ...info, items: readPackItems(inst, info.type, info.size, a), queueIndex: index };
+}
+
+function packInfo(engine: ImmolateModule, name: string): { type: string; size: number; choices: number } {
+  return withHandle(engine.packInfo(name), (info) => ({ type: info.type, size: info.size, choices: info.choices }));
 }
 
 function readShopItem(inst: EngineInstance, a: number): Item {
@@ -154,16 +192,6 @@ function readShopItem(inst: EngineInstance, a: number): Item {
       ? withHandle(raw.jokerData, toJoker)
       : consumable(raw.item, SHOP_CONSUMABLE_KINDS[raw.type] ?? 'tarot'),
   );
-}
-
-function readPack(engine: ImmolateModule, inst: EngineInstance, a: number): Pack {
-  const name = inst.nextPack(a);
-  const { type, size, choices } = withHandle(engine.packInfo(name), (info) => ({
-    type: info.type,
-    size: info.size,
-    choices: info.choices,
-  }));
-  return { name, type, size, choices, items: readPackItems(inst, type, size, a) };
 }
 
 function readConsumables(vec: EmVector<string>, kind: ConsumableKind): Item[] {
@@ -203,5 +231,5 @@ function vectorItems<T>(vec: EmVector<T>, read: (value: T) => Item): Item[] {
 }
 
 function consumable(name: string, fallback: ConsumableKind): Item {
-  return { kind: ALWAYS_SPECTRAL.has(name) ? 'spectral' : fallback, name };
+  return { kind: SPECTRAL_NAMES.has(name) ? 'spectral' : fallback, name };
 }

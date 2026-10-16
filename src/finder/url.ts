@@ -31,7 +31,7 @@ export function serializeQuery(query: FinderQuery): string {
 
 /** Slot ids are assigned as `slot-1`, `slot-2`, … in order. */
 export function parseQuery(search: string): FinderQuery {
-  const { seed: _seed, maxAnte: _maxAnte, ...settings } = parseSettings(search);
+  const { seed: _seed, maxAnte: _maxAnte, actions: _actions, ...settings } = parseSettings(search);
   return { settings: settings satisfies FinderSettings, slots: parseSlots(new URLSearchParams(search).get(SLOTS_PARAM)) };
 }
 

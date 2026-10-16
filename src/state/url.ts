@@ -2,6 +2,7 @@
 import { DECKS, STAKES, UNLOCK_OPTIONS, VERSIONS } from '../engine/constants';
 import { normalizeSeed } from '../engine/seed';
 import type { Settings } from '../engine/types';
+import { parseActions, serializeActions } from './actions';
 import { CARDS_PER_ANTE_OPTIONS, DEFAULT_SETTINGS, MAX_ANTE_LIMIT } from './settings';
 
 interface Param<K extends keyof Settings> {
@@ -25,6 +26,7 @@ const PARAMS: Param<keyof Settings>[] = [
   param({ field: 'cardsPerAnte', key: 'cards', encode: String, decode: numberOneOf(CARDS_PER_ANTE_OPTIONS) }),
   param({ field: 'showman', key: 'showman', encode: (v) => (v ? '1' : '0'), decode: (r) => r === '1' || r === 'true' }),
   param({ field: 'locked', key: 'locked', encode: (v) => v.join(','), decode: (r) => orderedUnlocks(r.split(',')) }),
+  param({ field: 'actions', key: 'act', encode: (v) => serializeActions(v ?? []), decode: parseActions }),
 ];
 
 export function serialize(s: Settings): string {

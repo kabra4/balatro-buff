@@ -13,7 +13,8 @@ export function horizonOf(query: FinderQuery): number {
 
 /** Analyzer settings for `seed` under `query`, analyzing through the query's horizon. */
 export function seedSettings(query: FinderQuery, seed: string): Settings {
-  return { ...query.settings, locked: [...query.settings.locked], seed, maxAnte: horizonOf(query), shopCaps: FINDER_SHOP_CAPS };
+  // TODO(finder dynamic run): drop theSoulCompat once the fast path models bought-voucher effects.
+  return { ...query.settings, locked: [...query.settings.locked], seed, maxAnte: horizonOf(query), shopCaps: FINDER_SHOP_CAPS, theSoulCompat: true };
 }
 
 /** Page-1 link (page-1 URL format) showing `seed` with the query's settings and the analyzer's default antes. */

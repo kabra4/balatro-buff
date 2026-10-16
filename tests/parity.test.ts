@@ -71,7 +71,7 @@ describe('parity with TheSoul text output', () => {
       selectedOptions: UNLOCK_OPTIONS.map((o) => !settings.locked.includes(o)),
     });
 
-    const ours = formatAsTheSoulText(analyze(engine, settings));
+    const ours = formatAsTheSoulText(analyze(engine, { ...settings, theSoulCompat: true }));
 
     expect(reference).toContain(`==ANTE ${settings.maxAnte}==`);
     for (const text of mustContain) expect(reference).toContain(text);

@@ -99,7 +99,8 @@ export const SLOT_KINDS: Readonly<Record<SlotKind, SlotKindSpec>> = {
       shop: { types: ['Spectral'], facet: spectralFacet, onlyIf: { settings: (s) => s.deck === 'Ghost Deck', hint: 'Shop spectrals need the Ghost Deck' } },
       packs: {
         'Spectral Pack': { facet: spectralFacet },
-        'Arcana Pack': { facet: spectralFacet, names: ['The Soul'] },
+        // The Soul, and with Omen Globe any Spectral card.
+        'Arcana Pack': { facet: spectralFacet },
         'Celestial Pack': { facet: spectralFacet, names: ['Black Hole'] },
       },
     },

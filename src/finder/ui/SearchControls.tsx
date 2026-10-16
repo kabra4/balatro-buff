@@ -38,7 +38,7 @@ export function SearchControls({ snapshot: s, problems, onSearch, onFindNext, on
       <p class="search-stats" data-testid="search-stats">
         Checked {formatCount(s.checked)} · {formatCount(Math.round(s.seedsPerSecond))} seeds/s · {formatDuration(s.elapsedMs)} · found {s.found}
         {s.workers > 0 && ` · ${s.workers} worker${s.workers === 1 ? '' : 's'}`}
-        {s.rejected > 0 && ` · ${s.rejected} rejected by verification`}
+        {s.rejected > 0 && ` · ${s.rejected} unreachable (skipping those blinds loses a shop)`}
       </p>
       {s.error && <p class="error">{s.error}</p>}
       {problems.length > 0 && (

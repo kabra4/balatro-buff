@@ -13,4 +13,5 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   cardsPerAnte: 50,
   showman: false,
   locked: [],
+  actions: [],
 });

@@ -29,7 +29,8 @@ describe('shop caps', () => {
     for (let i = 0; i < 50; i++) {
       const seed = randomSeed(random);
       expect(fullCheck(engine, q, seed).analysis.antes.map((a) => a.shop.length)).toEqual([10, 30, 50]);
-      for (const o of checker.collect(seed).filter((o) => o.where === 'shop')) {
+      // Shop cards only: the voucher (where 'shop' too) is rolled for its effects.
+      for (const o of checker.collect(seed).filter((o) => o.where === 'shop' && o.kind === 'joker')) {
         expect(shopIndex(o.place)).toBeLessThanOrEqual(o.ante === 1 ? 10 : o.ante === 2 ? 30 : 50);
       }
     }
@@ -43,9 +44,9 @@ describe('shop caps', () => {
     const random = seededRandom(2024);
     for (let i = 0; i < 50; i++) {
       const seed = randomSeed(random);
-      const shop = checker.collect(seed).filter((o) => o.where === 'shop');
+      const shop = checker.collect(seed).filter((o) => o.where === 'shop' && o.kind === 'joker');
       expect(shop.every((o) => o.shopIndex !== undefined && o.shopIndex <= 4 && o.place === `Shop #${o.shopIndex}`)).toBe(true);
-      const early = unlimited.collect(seed).filter((o) => o.where === 'shop' && (o.shopIndex ?? Infinity) <= 4);
+      const early = unlimited.collect(seed).filter((o) => o.where === 'shop' && o.kind === 'joker' && (o.shopIndex ?? Infinity) <= 4);
       expect(shop.map(withoutId)).toEqual(early.map(withoutId));
       expect(checker.check(seed)).toBe(fullCheck(engine, q, seed).matches !== null);
     }

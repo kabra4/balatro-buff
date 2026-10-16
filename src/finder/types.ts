@@ -24,7 +24,7 @@ export interface Slot {
 }
 
 /** Analyzer settings without the per-seed / display-only fields. */
-export type FinderSettings = Omit<Settings, 'seed' | 'maxAnte'>;
+export type FinderSettings = Omit<Settings, 'seed' | 'maxAnte' | 'actions' | 'theSoulCompat'>;
 
 export interface FinderQuery {
   settings: FinderSettings;

@@ -25,9 +25,11 @@ const CARD_TEXT: { [K in ItemKind]: (item: ItemOf<K>) => CardText } = {
 export interface ItemCardProps {
   item: Item;
   number?: number;
+  /** The card is in a preview (a blind not skipped): its Soul is only received if the tag is taken. */
+  preview?: boolean;
 }
 
-export function ItemCard({ item, number }: ItemCardProps) {
+export function ItemCard({ item, number, preview = false }: ItemCardProps) {
   const { title, mods } = (CARD_TEXT[item.kind] as (i: Item) => CardText)(item);
   const edition = item.kind === 'joker' || item.kind === 'playing' ? item.edition : null;
   const soul = item.kind !== 'joker' && item.kind !== 'playing' ? item.soul : undefined;
@@ -41,7 +43,7 @@ export function ItemCard({ item, number }: ItemCardProps) {
       <figcaption>
         <span class="card-title">{title}</span>
         {mods.length > 0 && <span class="card-mods">{mods.join(' · ')}</span>}
-        {soul && <span class="card-soul-label">{soulLabel(soul)}</span>}
+        {soul && <span class="card-soul-label">{soulLabel(soul)}{preview && ' if taken'}</span>}
       </figcaption>
     </figure>
   );

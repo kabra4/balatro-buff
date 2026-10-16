@@ -2,7 +2,7 @@
  * Slot ⇄ occurrence matching. Every slot needs its own occurrence: solved as a bipartite
  * matching (Kuhn's augmenting paths), never greedily.
  */
-import type { Edition } from '../engine/types';
+import type { Blind, Edition } from '../engine/types';
 import { hasShopSlot, SLOT_KINDS } from './slotKinds';
 import type { EditionReq, Slot, SlotKind } from './types';
 
@@ -19,10 +19,15 @@ export interface Occurrence {
   ante: number;
   /** Voucher and tags count as 'shop' (their slots ignore `where`). */
   where: 'shop' | 'packs';
-  /** "Shop #7" | "Jumbo Arcana Pack (pack 3)" | "Small blind tag" … */
+  /** "Shop #7" | "Jumbo Arcana Pack (pack 3)" | "Charm Tag (skip Small Blind)" | "Small blind tag" … */
   place: string;
   /** Shop items only: 1-based position in the ante's shop (the 7 in "Shop #7"). */
   shopIndex?: number;
+  /**
+   * Tag packs only: the blind whose skip gives this pack. A preview (blind not skipped on the analyzed
+   * line) is matched as if that skip were the only change — the verifier checks the skips together.
+   */
+  skip?: { ante: number; blind: Blind };
 }
 
 export function slotAccepts(slot: Slot, o: Occurrence): boolean {

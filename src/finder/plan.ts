@@ -1,34 +1,57 @@
 /**
  * Fast-path plan: which engine streams a query needs, through which ante, derived from the
- * slot-kind registry. RNG streams are keyed per ante ("Tag3", "shop_pack2", "cdt5", …) and
- * independent except through shared Instance state, so each step can be skipped on its own:
+ * slot-kind registry. The finder searches the default line (every voucher bought and in effect,
+ * no blind skipped, every shop pack opened; see engine/run.ts). RNG streams are keyed per ante
+ * ("Tag3", "shop_pack2", "cdt5", …) and independent except through shared Instance state, so each
+ * step can be skipped on its own unless a coupling below pulls it in:
  *
- * - voucher: "Voucher<a>" + voucher locks (lock rolled voucher, unlock its upgrade). Voucher names
- *   are in no other pool (all engine pools are name-disjoint — asserted in registry.test.ts), and
- *   isVoucherActive() reads params.vouchers (set by setDeck only).
- * - tags:    initUnlocks(a) + "Tag<a>" ×2. initUnlocks only touches boss and tag names.
- * - packs:   "shop_pack<a>" + cache.generatedFirstPack for every pack; contents only for the pack
+ * - voucher:   "Voucher<a>" + voucher locks (lock rolled voucher, unlock its upgrade) + activation.
+ *   Voucher names are in no other pool (all engine pools are name-disjoint — asserted in
+ *   registry.test.ts), but bought vouchers change other rolls (engine probes): shop rates and
+ *   editions (Tarot/Planet Merchant/Tycoon, Magic Trick, Hone, Glow Up), Arcana packs (Omen Globe)
+ *   and Buffoon pack editions (Hone, Glow Up). So the voucher step runs through the shop and the
+ *   Arcana / Buffoon pack contents (VOUCHER_PACK_TYPES).
+ * - tags:      initUnlocks(a) + "Tag<a>" ×2. initUnlocks only touches boss and tag names. Pack tags
+ *   (Charm, Ethereal, …) give a pack when their blind is skipped; the finder counts that pack as a
+ *   preview, so a needed pack type pulls the tags through the same ante.
+ * - shopEntry: the shop cards shown on entry (2 + Overstock slots), rolled before the ante's voucher
+ *   is bought — same streams as `shop`, so it runs through the same ante.
+ * - packs:     "shop_pack<a>" + cache.generatedFirstPack for every pack; contents only for the pack
  *   types needed. Each type has its own streams (soul_Tarot/Tarotar1, soul_Spectral/Spectralspe,
  *   soul_Planet/Planetpl1, …buf…); in-pack dedupe locks are released at the end of the pack, and
- *   names a pack could release early (showman) are never read by other pools (no RETRY in joker pools).
- * - shop:    "cdt<a>" for every queue slot up to the deepest shop slot a slot still due accepts;
+ *   names a pack could release early (showman) are never read by other pools (no RETRY in joker
+ *   pools). Exception: with Omen Globe active, Arcana packs roll Spectral cards — sharing the
+ *   ante's Spectral streams and a run-wide "omen_globe" stream — so Arcana and Spectral contents
+ *   are rolled together (OMEN_GLOBE_PACK_TYPES) unless Omen Globe is locked in the profile.
+ * - shop:      "cdt<a>" for every queue slot up to the deepest shop slot a slot still due accepts;
  *   only item types a slot can match are rolled further.
  *   Shop jokers are rolled without stickers (sticker streams come after name/edition and feed
  *   nothing we match on).
- * - boss:    never needed ("boss" stream + boss-name locks only).
+ * - boss:      never needed ("boss" stream + boss-name locks only).
  *
  * Every step runs on a prefix of antes 1..through, because streams are sequential across antes
- * (voucher locks, initUnlocks, generatedFirstPack, the global Soul stream "Joker4").
+ * (voucher locks and effects, initUnlocks, generatedFirstPack, the global Soul stream "Joker4",
+ * "omen_globe").
  */
+import { TAG_PACKS } from '../engine/constants';
 import { horizonOf } from './query';
 import { SLOT_KIND_IDS, SLOT_KINDS, slotSources, type ItemSource } from './slotKinds';
-import { ANTE_SOURCE_IDS, type AnteSource, type PackType, type ShopItemType } from './sources';
+import { ANTE_SOURCE_IDS, PACK_TYPES, type AnteSource, type PackType, type ShopItemType } from './sources';
 import type { FinderQuery, Slot } from './types';
 
-export type StepId = AnteSource | 'packs' | 'shop';
+export type StepId = AnteSource | 'shopEntry' | 'packs' | 'shop';
 
-/** Per-ante step order: cheap ante values first, the expensive shop last, so deadlines reject early. */
-export const STEP_ORDER: readonly StepId[] = [...ANTE_SOURCE_IDS, 'packs', 'shop'];
+/**
+ * Per-ante step order: cheap ante values first, the expensive shop last, so deadlines reject early.
+ * `shopEntry` comes before `packs` because the ante's voucher takes effect between them.
+ */
+export const STEP_ORDER: readonly StepId[] = [...ANTE_SOURCE_IDS, 'shopEntry', 'packs', 'shop'];
+
+/** Pack types whose contents bought vouchers change (Omen Globe; Hone / Glow Up editions). */
+export const VOUCHER_PACK_TYPES: readonly PackType[] = ['Arcana Pack', 'Buffoon Pack'];
+
+/** Pack types whose contents Omen Globe couples (Spectral cards in Arcana packs). */
+export const OMEN_GLOBE_PACK_TYPES: readonly PackType[] = ['Arcana Pack', 'Spectral Pack'];
 
 /**
  * Packs whose cards can carry a Soul-derived facet (registry sources flagged `soul`: Arcana and
@@ -37,6 +60,8 @@ export const STEP_ORDER: readonly StepId[] = [...ANTE_SOURCE_IDS, 'packs', 'shop
  * Soul-derived slot needs.
  */
 export const SOUL_PACK_TYPES: readonly PackType[] = soulPackTypes();
+
+const TAG_PACK_TYPES: ReadonlySet<PackType> = tagPackTypes();
 
 export interface PlannedSlot {
   slot: Slot;
@@ -91,6 +116,7 @@ export function buildPlan(query: FinderQuery): Plan {
     if (needs.souls) souls = Math.max(souls, a);
     return { slot, lastStep: Math.max(-1, ...[...needs.steps].map((s) => STEP_ORDER.indexOf(s))) };
   });
+  addCouplings(query, through, packTypes);
   return { horizon, through, packTypes, shopTypes, shopDepth, souls, slots, impossible: slots.some((p) => p.lastStep < 0) };
 }
 
@@ -98,6 +124,7 @@ function slotNeeds(slot: Slot, { settings }: FinderQuery): SlotNeeds {
   const sources = slotSources(slot, settings);
   const needs: SlotNeeds = { steps: new Set(sources.ante), packTypes: new Set(), shopTypes: new Set(), shopDepth: 0, souls: false };
   if (sources.shop) {
+    needs.steps.add('shopEntry');
     needs.steps.add('shop');
     needs.shopDepth = slot.shopSlot ?? Infinity;
     for (const type of sources.shop.types) needs.shopTypes.add(type);
@@ -109,6 +136,25 @@ function slotNeeds(slot: Slot, { settings }: FinderQuery): SlotNeeds {
   }
   if (needs.souls) for (const type of SOUL_PACK_TYPES) needs.packTypes.add(type);
   return needs;
+}
+
+/** Steps and pack types the needed ones depend on (see the module doc). Mutates its arguments. */
+function addCouplings({ settings }: FinderQuery, through: Record<StepId, number>, packTypes: Map<PackType, number>): void {
+  if (!settings.locked.includes('Omen Globe')) {
+    const coupled = Math.max(0, ...OMEN_GLOBE_PACK_TYPES.map((type) => packTypes.get(type) ?? 0));
+    if (coupled > 0) for (const type of OMEN_GLOBE_PACK_TYPES) packTypes.set(type, coupled);
+  }
+  for (const [type, a] of packTypes) {
+    if (TAG_PACK_TYPES.has(type)) through.tags = Math.max(through.tags, a);
+    if (VOUCHER_PACK_TYPES.includes(type)) through.voucher = Math.max(through.voucher, a);
+  }
+  through.voucher = Math.max(through.voucher, through.shop);
+}
+
+/** Pack types some pack tag gives ("Mega Arcana Pack" → Arcana Pack). */
+function tagPackTypes(): Set<PackType> {
+  const names = Object.values(TAG_PACKS);
+  return new Set(PACK_TYPES.filter((type) => names.some((name) => name.endsWith(type))));
 }
 
 function soulPackTypes(): PackType[] {

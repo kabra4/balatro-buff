@@ -1,4 +1,5 @@
 /** Game constants shared by the analyzer and the UI. Lists mirror TheSoul's index.html. */
+import type { Blind } from './types';
 
 export const DECKS = [
   'Red Deck',
@@ -119,6 +120,37 @@ export const UNLOCK_OPTIONS = [
   'Retcon',
   'Palette',
 ] as const;
+
+export const BLIND_NAMES: Readonly<Record<Blind, string>> = { small: 'Small Blind', big: 'Big Blind' };
+
+/** Tags that give a pack when their blind is skipped → the pack. */
+export const TAG_PACKS: Readonly<Record<string, string>> = {
+  'Charm Tag': 'Mega Arcana Pack',
+  'Ethereal Tag': 'Spectral Pack',
+  'Meteor Tag': 'Mega Celestial Pack',
+  'Buffoon Tag': 'Mega Buffoon Pack',
+  'Standard Tag': 'Mega Standard Pack',
+};
+
+/** Tags whose effect changes later rolls but isn't simulated yet (UI hint on their Skip control). */
+export const UNMODELED_TAGS = [
+  'Rare Tag',
+  'Uncommon Tag',
+  'Voucher Tag',
+  'Double Tag',
+  'Boss Tag',
+  'Top-up Tag',
+  'Orbital Tag',
+  // Change the next shop's joker editions.
+  'Foil Tag',
+  'Holographic Tag',
+  'Polychrome Tag',
+  'Negative Tag',
+] as const;
+
+/** Vouchers that each add a shop card slot. */
+export const SHOP_SLOT_VOUCHERS = ['Overstock', 'Overstock Plus'] as const;
+export const BASE_SHOP_SLOTS = 2;
 
 export const LEGENDARY_JOKERS = ['Canio', 'Triboulet', 'Yorick', 'Chicot', 'Perkeo'] as const;
 

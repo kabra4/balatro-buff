@@ -51,6 +51,18 @@ describe('bought voucher effects', () => {
     expect(effects!.shop[2]).not.toEqual(compat!.shop[2]);
   });
 
+  it('an active Overstock widens the next shop entry: 3 cards before the voucher applies (QSM8TVB2)', async () => {
+    const engine = await loadTestEngine();
+    const settings = { ...BASE, seed: 'QSM8TVB2', maxAnte: 2, cardsPerAnte: 10 };
+
+    const effects = analyze(engine, settings).antes;
+    const compat = analyze(engine, { ...settings, theSoulCompat: true }).antes;
+
+    expect(effects.map((a) => a.voucher)).toEqual(['Overstock', 'Magic Trick']);
+    expect(effects[1]!.shop.slice(0, 3)).toEqual(compat[1]!.shop.slice(0, 3));
+    expect(effects[1]!.shop).not.toEqual(compat[1]!.shop);
+  });
+
   it('a profile-locked upgrade stays locked after its base voucher is bought (SGCDCJXX)', async () => {
     const engine = await loadTestEngine();
     const settings = { ...BASE, seed: 'SGCDCJXX', maxAnte: 20 };
@@ -114,7 +126,9 @@ describe('run choices', () => {
     expect(big[0]!.packs.map((p) => p.queueIndex)).toEqual([0, 1]);
     expect(played.map((a) => a.packs.length)).toEqual([4, 6]);
     expect(small.antes.map((a) => a.packs.filter((p) => !p.tag).length)).toEqual([2, 4]);
-    expect(both[0]!.packs.map((p) => p.tag?.name)).toEqual(['Charm Tag']);
+    // The boss shop is always visited: both blinds skipped still opens 2 shop packs (and the first-pack Buffoon stays in ante 1).
+    expect(both[0]!.packs.map((p) => p.tag?.name ?? p.name)).toEqual(['Charm Tag', 'Buffoon Pack', 'Arcana Pack']);
+    expect(both[1]!.packs.map((p) => p.name)).toEqual(played[1]!.packs.map((p) => p.name));
     expect(both[0]!.skipped).toEqual(['small', 'big']);
   });
 

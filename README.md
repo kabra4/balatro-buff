@@ -77,8 +77,12 @@ Every match is re-checked with a full analysis before it is shown, and
 **Open in analyzer** opens it on the analyzer page. The query lives in the URL (`q=` plus the
 analyzer's settings params), so searches are shareable.
 
-The finder doesn't model run choices yet: it searches as TheSoul does (no skips, voucher effects
-off), so a found seed can look different in the analyzer once an effect voucher is bought.
+The finder searches the analyzer's default line: every voucher bought (and in effect), every shop
+pack opened, no blind skipped. Pack tags count too: a Charm / Ethereal / Meteor / Buffoon /
+Standard Tag's pack is matched as if you skipped that blind. Such a match is re-checked with those
+blinds actually skipped (skipping drops that blind's shop visit, so two packs fewer that ante), and
+**Open in analyzer** opens the seed with those skips applied. Since voucher effects are now on,
+shared finder links may find different seeds than before.
 
 Speed comes from only rolling the engine streams a query needs (e.g. a tag-only query never rolls a
 shop) and rejecting a seed as soon as a deadline can't be met — see `src/finder/plan.ts` for which

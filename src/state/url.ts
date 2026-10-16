@@ -40,7 +40,7 @@ export function serialize(s: Settings): string {
 
 export function parse(query: string): Settings {
   const params = new URLSearchParams(query);
-  const settings: Settings = { ...DEFAULT_SETTINGS, locked: [...DEFAULT_SETTINGS.locked] };
+  const settings: Settings = { ...DEFAULT_SETTINGS, locked: [...DEFAULT_SETTINGS.locked], actions: [] };
   for (const p of PARAMS) {
     const raw = params.get(p.key);
     const value = raw === null ? undefined : p.decode(raw);

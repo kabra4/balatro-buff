@@ -40,7 +40,7 @@ export interface SearchSnapshot {
   elapsedMs: number;
   found: number;
   workers: number;
-  /** Fast-path hits that full analysis rejected (should stay 0). */
+  /** Fast-path hits that full analysis rejected: tag-pack skips that don't work together (else should stay 0). */
   rejected: number;
   error: string | null;
 }

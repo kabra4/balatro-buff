@@ -62,9 +62,12 @@ export function packsForAnte(ante: number): number {
   return ante === 1 ? 4 : 6;
 }
 
-/** Shop packs opened in `ante`: every skipped blind is a shop visit (2 packs) fewer. */
+/**
+ * Shop packs opened in `ante`: every skipped blind is a shop visit (2 packs) fewer. The boss shop is always
+ * visited, so at least one visit's packs remain (ante 1: 4 → 2 → 2).
+ */
 export function shopPackCount(ante: number, skipped: ReadonlySet<Blind>): number {
-  return Math.max(0, packsForAnte(ante) - SHOP_PACKS_PER_VISIT * skipped.size);
+  return Math.max(SHOP_PACKS_PER_VISIT, packsForAnte(ante) - SHOP_PACKS_PER_VISIT * skipped.size);
 }
 
 export function createVoucherState(upgrades: ReadonlyMap<string, string>, s: Pick<Settings, 'locked' | 'theSoulCompat'>): VoucherState {

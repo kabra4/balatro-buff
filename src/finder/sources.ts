@@ -12,11 +12,12 @@
 import { toEdition } from '../engine/editions';
 import { withHandle } from '../engine/instance';
 import type { EngineInstance, ImmolateModule } from '../engine/loader';
-import { createVoucherState, voucherUpgrades } from '../engine/run';
+import type { VoucherState } from '../engine/run';
 import type { AnteResult, Item, Settings } from '../engine/types';
 
 /** Base pack types as returned by the engine's `packInfo`. */
-export type PackType = 'Arcana Pack' | 'Celestial Pack' | 'Spectral Pack' | 'Buffoon Pack' | 'Standard Pack';
+export const PACK_TYPES = ['Arcana Pack', 'Celestial Pack', 'Spectral Pack', 'Buffoon Pack', 'Standard Pack'] as const;
+export type PackType = (typeof PACK_TYPES)[number];
 /** Shop queue item types as rolled by the engine's `nextShopItem`. */
 export type ShopItemType = 'Joker' | 'Tarot' | 'Planet' | 'Spectral';
 
@@ -28,8 +29,11 @@ export interface AnteSourceSpec {
   places: readonly string[];
   /** The same values from a full analysis. */
   fromAnte: (ante: AnteResult) => readonly string[];
-  /** Fast-path roller, created per seed (it may hold per-run state) and called in ante order 1, 2, … */
-  createRoller: (engine: ImmolateModule, settings: Settings) => AnteRoller;
+  /**
+   * Fast-path roller, created per seed (it may hold per-run state) and called in ante order 1, 2, …
+   * `vouchers` is the seed's voucher state, shared with the rest of the fast path.
+   */
+  createRoller: (engine: ImmolateModule, settings: Settings, vouchers: VoucherState) => AnteRoller;
 }
 
 /** Fast-path roll of one shop item of a type, after its "cdt" type roll (same streams as nextShopItem). */
@@ -42,10 +46,8 @@ export const ANTE_SOURCES = {
   voucher: {
     places: ['Voucher'],
     fromAnte: (a) => [a.voucher],
-    createRoller: (engine, settings) => {
-      const vouchers = createVoucherState(voucherUpgrades(engine), settings);
-      return (inst, ante) => [vouchers.roll(inst, ante, true)];
-    },
+    // The finder's line buys every voucher; check.ts activates it when the game would.
+    createRoller: (_engine, _settings, vouchers) => (inst, ante) => [vouchers.roll(inst, ante, true)],
   },
   tags: {
     places: ['Small blind tag', 'Big blind tag'],

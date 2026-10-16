@@ -14,7 +14,7 @@ import { BLIND_NAMES, EMPTY_POOL_JOKER, LEGENDARY_JOKERS, SOUL_CARD } from './co
 import { toEdition } from './editions';
 import { createInstance, withHandle } from './instance';
 import type { EngineInstance, ImmolateModule } from './loader';
-import type { AnteResult, ConsumableKind, Item, Pack, Settings, SoulLocation, SoulResult } from './types';
+import type { AnteResult, Blind, ConsumableKind, Item, Pack, Settings, SoulLocation, SoulResult } from './types';
 
 type ConsumableItem = Extract<Item, { kind: ConsumableKind }>;
 
@@ -27,6 +27,8 @@ interface SoulSite {
 export interface SoulRoller {
   /** Resolves the next Soul (call in order of appearance) found in `ante`. */
   roll(ante: number): SoulResult;
+  /** Antes of the Souls rolled so far, in order (replaying them on a fresh roller reproduces its state). */
+  history(): readonly number[];
   /** Deletes the roller's Instance (if one was created). Idempotent. */
   dispose(): void;
 }
@@ -54,7 +56,7 @@ export function resolveSouls(engine: ImmolateModule, s: Settings, antes: AnteRes
 export function createSoulRoller(engine: ImmolateModule, s: Settings): SoulRoller {
   let inst: EngineInstance | null = null;
   let disposed = false;
-  let count = 0;
+  const antes: number[] = [];
   const owned = new Set<string>();
   return {
     roll: (ante) => {
@@ -65,21 +67,51 @@ export function createSoulRoller(engine: ImmolateModule, s: Settings): SoulRolle
         legendary: jd.joker,
         edition: toEdition(jd.edition),
       }));
-      count++;
+      antes.push(ante);
       if (!s.showman && !allOwned) {
         inst.lock(roll.legendary);
         owned.add(roll.legendary);
       }
       return allOwned
-        ? { index: count, legendary: EMPTY_POOL_JOKER, edition: roll.edition, allOwned: true }
-        : { index: count, ...roll };
+        ? { index: antes.length, legendary: EMPTY_POOL_JOKER, edition: roll.edition, allOwned: true }
+        : { index: antes.length, ...roll };
     },
+    history: () => antes,
     dispose: () => {
       disposed = true;
       inst?.delete();
       inst = null;
     },
   };
+}
+
+/**
+ * The Soul a card would yield after the Souls of `prior` antes (a `history()`), in `ante` — for a
+ * pack that isn't opened on the analyzed line (tag-pack previews). Replays a fresh roller.
+ */
+export function previewSoul(engine: ImmolateModule, s: Settings, prior: readonly number[], ante: number): SoulResult {
+  const roller = createSoulRoller(engine, s);
+  try {
+    for (const a of prior) roller.roll(a);
+    return roller.roll(ante);
+  } finally {
+    roller.dispose();
+  }
+}
+
+/** Place label of a shop pack: "Jumbo Arcana Pack (pack 3)" (`index` 0-based in the shop queue). */
+export function shopPackPlace(name: string, index: number): string {
+  return `${name} (pack ${index + 1})`;
+}
+
+/** Place label of a skipped blind's tag pack: "Charm Tag (skip Small Blind)". */
+export function tagPackPlace(tag: string, blind: Blind): string {
+  return `${tag} (skip ${BLIND_NAMES[blind]})`;
+}
+
+/** Where `pack` was opened (`fallbackIndex`: its open-order index, for packs without a queue index). */
+export function packPlace(pack: Pack, fallbackIndex: number): string {
+  return pack.tag ? tagPackPlace(pack.tag.name, pack.tag.blind) : shopPackPlace(pack.name, pack.queueIndex ?? fallbackIndex);
 }
 
 export function isSoulCard(item: Item): item is ConsumableItem {
@@ -99,10 +131,4 @@ function findSoulSites(antes: AnteResult[]): SoulSite[] {
     });
   }
   return sites;
-}
-
-/** Where a Soul in `pack` came from: "Jumbo Arcana Pack (pack 3)" (shop queue) or "Charm Tag (skip Small Blind)". */
-function packPlace(pack: Pack, fallbackIndex: number): string {
-  if (pack.tag) return `${pack.tag.name} (skip ${BLIND_NAMES[pack.tag.blind]})`;
-  return `${pack.name} (pack ${(pack.queueIndex ?? fallbackIndex) + 1})`;
 }

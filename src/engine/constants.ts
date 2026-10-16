@@ -133,7 +133,20 @@ export const TAG_PACKS: Readonly<Record<string, string>> = {
 };
 
 /** Tags whose effect changes later rolls but isn't simulated yet (UI hint on their Skip control). */
-export const UNMODELED_TAGS = ['Rare Tag', 'Uncommon Tag', 'Voucher Tag', 'Double Tag', 'Boss Tag', 'Top-up Tag', 'Orbital Tag'] as const;
+export const UNMODELED_TAGS = [
+  'Rare Tag',
+  'Uncommon Tag',
+  'Voucher Tag',
+  'Double Tag',
+  'Boss Tag',
+  'Top-up Tag',
+  'Orbital Tag',
+  // Change the next shop's joker editions.
+  'Foil Tag',
+  'Holographic Tag',
+  'Polychrome Tag',
+  'Negative Tag',
+] as const;
 
 /** Vouchers that each add a shop card slot. */
 export const SHOP_SLOT_VOUCHERS = ['Overstock', 'Overstock Plus'] as const;

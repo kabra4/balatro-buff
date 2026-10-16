@@ -67,7 +67,7 @@ export function App() {
               onChange={setFilter}
               onExpandAll={() => setOpen(new Set(analysis.antes.map((a) => a.ante)))}
               onCollapseAll={() => setOpen(new Set())}
-              actionCount={actions.length}
+              actionCount={actions.filter((a) => a.ante <= settings.maxAnte).length}
               onResetActions={() => patch({ actions: [] })}
             />
             <div class="antes">
@@ -97,7 +97,8 @@ export function App() {
 
 function initialSettings(): Settings {
   const s = parse(window.location.search);
-  return s.seed ? s : { ...s, seed: randomSeed() };
+  // Run choices belong to a seed: a link without one doesn't apply them to a random seed.
+  return s.seed ? s : { ...s, seed: randomSeed(), actions: [] };
 }
 
 function redefinesRun(s: Settings, p: Partial<Settings>): boolean {

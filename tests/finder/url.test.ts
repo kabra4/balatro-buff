@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UNLOCK_OPTIONS } from '../../src/engine/constants';
+import type { Occurrence } from '../../src/finder/match';
 import { analyzerHref } from '../../src/finder/query';
 import type { FinderQuery, Slot } from '../../src/finder/types';
 import { MAX_SLOTS, parseQuery, serializeQuery } from '../../src/finder/url';
@@ -93,7 +94,7 @@ describe('finder URL state', () => {
   });
 
   it('builds a page-1 analyzer link with the same settings', () => {
-    const href = analyzerHref(FULL, 'ABCD1234');
+    const href = analyzerHref(FULL, 'ABCD1234', new Map());
     expect(href.startsWith('./index.html?')).toBe(true);
     expect(parseAnalyzer(href.slice(href.indexOf('?')))).toEqual({
       ...FULL.settings,
@@ -102,5 +103,21 @@ describe('finder URL state', () => {
       locked: UNLOCK_OPTIONS.filter((o) => FULL.settings.locked.includes(o)),
       actions: [],
     });
+  });
+
+  it('analyzer link skips the blinds of matched tag packs', () => {
+    const at = { kind: 'soul', name: 'Perkeo', edition: null, where: 'packs', place: 'Charm Tag (skip Big Blind)' } as const;
+    const matches = new Map<string, Occurrence>([
+      ['a', { ...at, id: 1, ante: 2, skip: { ante: 2, blind: 'big' } }],
+      ['b', { ...at, id: 2, ante: 1, skip: { ante: 1, blind: 'small' } }],
+      ['c', { ...at, id: 3, ante: 2, skip: { ante: 2, blind: 'big' } }],
+      ['d', { ...at, id: 4, ante: 3, place: 'Mega Arcana Pack (pack 2)' }],
+    ]);
+    const href = analyzerHref(FULL, 'ABCD1234', matches);
+    expect(new URLSearchParams(href.slice(href.indexOf('?'))).get('act')).toBe('s1,b2');
+    expect(parseAnalyzer(href.slice(href.indexOf('?'))).actions).toEqual([
+      { kind: 'skipBlind', ante: 1, blind: 'small' },
+      { kind: 'skipBlind', ante: 2, blind: 'big' },
+    ]);
   });
 });

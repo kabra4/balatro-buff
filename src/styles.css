@@ -435,6 +435,20 @@ summary:focus-visible {
   color: #e9d7a6;
 }
 
+.label-skipped {
+  opacity: 0.55;
+}
+
+.label-skipped .ante-label-text {
+  text-decoration: line-through;
+}
+
+.label-taken {
+  background: #f5b14326;
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+
 .ante-badges {
   margin-left: auto;
   display: flex;
@@ -500,6 +514,58 @@ summary:focus-visible {
 .pack-meta {
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+.pack-name .toggle {
+  margin-left: auto;
+}
+
+.pack-preview {
+  background: transparent;
+  border: 2px dashed var(--line);
+  opacity: 0.75;
+}
+
+/* ---------- Run choices ---------- */
+
+.run-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 6px 8px;
+  margin-top: 6px;
+  background: var(--bg-deep);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.run-title {
+  font-family: var(--pixel);
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
+.run-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toggle {
+  padding: 2px 10px;
+  min-height: 26px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.toggle-on {
+  background: var(--green);
+  color: #fff;
+}
+
+.toggle-note {
+  color: var(--gold);
 }
 
 /* ---------- Cards ---------- */

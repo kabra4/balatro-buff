@@ -86,8 +86,8 @@ describe('analysis stepper', () => {
     expect(stepper.next()).toBeNull();
 
     const full = analyze(engine, settings);
-    // analyze() also resolves Souls (adds `soul` to Soul cards); compare without it.
-    const strip = (x: unknown) => JSON.parse(JSON.stringify(x, (k, v) => (k === 'soul' ? undefined : v)));
+    // analyze() also resolves Souls (adds `soul` to Soul cards) and attaches tag previews; compare without them.
+    const strip = (x: unknown) => JSON.parse(JSON.stringify(x, (k, v) => (k === 'soul' || k === 'tagPreviews' ? undefined : v)));
     expect(strip(antes)).toEqual(strip(full.antes));
   });
 });

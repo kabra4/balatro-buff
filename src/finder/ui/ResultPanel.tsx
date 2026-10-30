@@ -21,7 +21,7 @@ export function ResultPanel({ hit }: { hit: VerifiedHit }) {
         <button type="button" class="btn-small" onClick={copy}>
           {copied ? 'Copied!' : 'Copy seed'}
         </button>
-        <a class="btn-small result-open" href={analyzerHref(hit.query, hit.seed)} target="_blank" rel="noopener">
+        <a class="btn-small result-open" href={analyzerHref(hit.query, hit.seed, hit.matches)} target="_blank" rel="noopener">
           Open in analyzer ↗
         </a>
       </div>

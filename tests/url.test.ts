@@ -13,6 +13,13 @@ const CUSTOM: Settings = {
   cardsPerAnte: 200,
   showman: true,
   locked: ['Negative Tag', 'Oops! All 6s', "Driver's License", 'Palette'],
+  actions: [
+    { kind: 'skipVoucher', ante: 1 },
+    { kind: 'skipBlind', ante: 2, blind: 'small' },
+    { kind: 'skipBlind', ante: 2, blind: 'big' },
+    { kind: 'skipPack', ante: 2, index: 4 },
+    { kind: 'skipPack', ante: 12, index: 0 },
+  ],
 };
 
 describe('url state', () => {

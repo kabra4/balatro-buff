@@ -2,6 +2,7 @@
  * Turns analysis output into occurrences, driven by the slot-kind registry. Shared by the fast
  * path (fed only the sources it rolled) and the full-analysis reference / hit verification.
  */
+import { packPlace, tagPackPlace } from '../engine/souls';
 import type { Analysis, Item } from '../engine/types';
 import type { Occurrence } from './match';
 import { SLOT_KIND_IDS, SLOT_KINDS, type ItemSource } from './slotKinds';
@@ -32,10 +33,10 @@ export class OccurrenceCollector {
     this.item(SHOP_KINDS, item, { ante, where: 'shop', place: `Shop #${index + 1}`, shopIndex: index + 1 });
   }
 
-  /** `packIndex` is 0-based within the ante; `type` is the base pack type from `packInfo`. */
-  packItem(ante: number, packIndex: number, packName: string, type: string, item: Item): void {
+  /** `place`: the pack's label (souls.ts `packPlace`); `type`: its base type from `packInfo`; `skip`: tag packs only. */
+  packItem(ante: number, place: string, type: string, item: Item, skip?: Occurrence['skip']): void {
     const kinds = PACK_KINDS.get(type as PackType);
-    if (kinds) this.item(kinds, item, { ante, where: 'packs', place: `${packName} (pack ${packIndex + 1})` });
+    if (kinds) this.item(kinds, item, { ante, where: 'packs', place, ...(skip && { skip }) });
   }
 
   private anteValue(ante: number, source: AnteSource, name: string, place: string): void {
@@ -45,7 +46,7 @@ export class OccurrenceCollector {
     }
   }
 
-  private item(kinds: readonly KindSource[], item: Item, at: Pick<Occurrence, 'ante' | 'where' | 'place' | 'shopIndex'>): void {
+  private item(kinds: readonly KindSource[], item: Item, at: Pick<Occurrence, 'ante' | 'where' | 'place' | 'shopIndex' | 'skip'>): void {
     let id = 0;
     for (const [kind, source] of kinds) {
       const facet = source.facet(item);
@@ -56,16 +57,23 @@ export class OccurrenceCollector {
   }
 }
 
-/** Every occurrence in a full analysis (Souls must already be resolved, as `analyze` does). */
+/**
+ * Every occurrence in a full analysis (Souls must already be resolved, as `analyze` does): opened
+ * packs (shop and skipped blinds' tags) and tag-pack previews of the blinds not skipped.
+ */
 export function occurrencesFrom(analysis: Analysis): Occurrence[] {
   const collector = new OccurrenceCollector();
   for (const anteResult of analysis.antes) {
-    const { ante, shop, packs } = anteResult;
+    const { ante, shop, packs, tagPreviews = [] } = anteResult;
     for (const source of ANTE_SOURCE_IDS) collector.anteValues(ante, source, ANTE_SOURCES[source].fromAnte(anteResult));
     shop.forEach((item, q) => collector.shopItem(ante, q, item));
     packs.forEach((pack, p) => {
-      for (const item of pack.items) collector.packItem(ante, p, pack.name, pack.type, item);
+      const skip = pack.tag && { ante, blind: pack.tag.blind };
+      for (const item of pack.items) collector.packItem(ante, packPlace(pack, p), pack.type, item, skip);
     });
+    for (const { blind, tag, pack } of tagPreviews) {
+      for (const item of pack.items) collector.packItem(ante, tagPackPlace(tag, blind), pack.type, item, { ante, blind });
+    }
   }
   return collector.list;
 }

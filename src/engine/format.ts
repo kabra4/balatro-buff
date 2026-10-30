@@ -1,5 +1,5 @@
 /** Renders an Analysis as TheSoul's plain-text output (used for parity tests and text export). */
-import type { Analysis, AnteResult, Item, ItemKind, ItemOf } from './types';
+import type { Analysis, AnteResult, Item, ItemKind, ItemOf, Pack } from './types';
 
 const ITEM_TEXT: { [K in ItemKind]: (item: ItemOf<K>) => string } = {
   joker: (j) => prefixed([...stickerWords(j.stickers), j.edition], j.name),
@@ -17,6 +17,11 @@ export function itemText(item: Item): string {
   return (ITEM_TEXT[item.kind] as (i: Item) => string)(item);
 }
 
+/** "Mega Arcana Pack", or "Charm Tag → Mega Arcana Pack" for a skipped blind's tag pack. */
+export function packTitle(pack: Pack): string {
+  return pack.tag ? `${pack.tag.name} → ${pack.name}` : pack.name;
+}
+
 function formatAnte(a: AnteResult): string {
   let out = `==ANTE ${a.ante}==\n`;
   out += `Boss: ${a.boss}\n`;
@@ -28,7 +33,7 @@ function formatAnte(a: AnteResult): string {
   });
   out += '\nPacks: \n';
   for (const pack of a.packs) {
-    out += `${pack.name} - ${pack.items.map(itemText).join(', ')}\n`;
+    out += `${packTitle(pack)} - ${pack.unopened ? '(not opened)' : pack.items.map(itemText).join(', ')}\n`;
   }
   return out + '\n';
 }

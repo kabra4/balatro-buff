@@ -79,6 +79,23 @@ export const QUERIES: Record<string, FinderQuery> = {
     slot('spectral', null, 2, { where: 'shop', shopSlot: 5 }),
     slot('joker', 'Blueprint', 4, { shopSlot: 10 }),
   ]),
+  // Tag packs (Charm / Ethereal / Buffoon …) count through their previews.
+  'tag packs: Soul in packs by 1': query({}, [slot('soul', null, 1, { where: 'packs' })]),
+  'tag packs: Spectral in packs by 2 + Soul by 3, Ghost Deck': query({ deck: 'Ghost Deck' }, [
+    slot('spectral', 'Ectoplasm', 2, { where: 'packs' }),
+    slot('soul', null, 3, { where: 'packs' }),
+  ]),
+  'tag packs: Foil pack joker by 1 + Polychrome joker by 3, Glow Up reachable': query({ cardsPerAnte: 10 }, [
+    slot('joker', null, 1, { where: 'packs', edition: 'Foil' }),
+    slot('joker', null, 3, { where: 'packs', edition: 'Polychrome' }),
+  ]),
+  // Omen Globe (via Crystal Ball): Spectral cards in Arcana packs, Arcana ↔ Spectral streams coupled.
+  'Omen Globe by 4 + spectrals in packs by 6': query({}, [
+    slot('voucher', 'Omen Globe', 4),
+    slot('spectral', null, 6, { where: 'packs' }),
+    slot('spectral', 'Hex', 6, { where: 'packs' }),
+  ]),
+  'Crystal Ball by 2 + Souls by 5': query({}, [slot('voucher', 'Crystal Ball', 2), slot('soul', null, 5), slot('soul', null, 5)]),
   'deep shop: Blueprint by 8, 50 cards, Black Stake': query({ stake: 'Black Stake', cardsPerAnte: 50, deck: 'Plasma Deck' }, [
     slot('joker', 'Blueprint', 8),
     slot('soul', 'Perkeo', 8, { where: 'packs' }),
